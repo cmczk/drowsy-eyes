@@ -23,7 +23,7 @@ const ICONS = {
 type DrowsyIcon = keyof typeof ICONS;
 
 type DrowsyButtonProps = TouchableOpacityProps & {
-  type: 'default' | 'icon';
+  type: 'default' | 'cancel' | 'icon';
   label?: string;
   icon?: DrowsyIcon;
 };
@@ -35,8 +35,15 @@ export const DrowsyButton: React.FC<DrowsyButtonProps> = ({
   ...props
 }) => {
   return (
-    <TouchableOpacity style={[type === 'icon' && styles.icon]} {...props}>
-      {label && <DrowsyText>{label}</DrowsyText>}
+    <TouchableOpacity
+      style={[
+        type === 'default' && styles.base,
+        type === 'icon' && styles.icon,
+        type === 'cancel' && styles.cancel,
+      ]}
+      {...props}
+    >
+      {label && <DrowsyText style={[styles.text]}>{label}</DrowsyText>}
 
       {icon && (
         <SymbolView name={ICONS[icon]} size={24} tintColor={COLORS.DARK.TEXT} />
@@ -46,6 +53,19 @@ export const DrowsyButton: React.FC<DrowsyButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
+  base: {
+    backgroundColor: COLORS.DARK.SECONDARY,
+    borderRadius: 18,
+    padding: 10,
+  },
+  text: {
+    color: COLORS.DARK.PRIMARY,
+  },
+  cancel: {
+    backgroundColor: COLORS.DARK.SECONDARY,
+    borderRadius: 18,
+    padding: 10,
+  },
   icon: {
     width: 44,
     aspectRatio: 1,

@@ -3,6 +3,7 @@ import { DreamList } from '@/components/DreamList';
 import { Header } from '@/components/Header';
 import { COLORS } from '@/constants/theme';
 import { Dream } from '@/models/Dream';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,17 +39,7 @@ export default function Index() {
       <StatusBar barStyle="light-content" />
       <Header />
       <DreamList dreams={dreams} />
-      <AddDreamButton
-        onPress={() => {
-          setDreams([
-            ...dreams,
-            {
-              id: 0,
-              title: new Date().toLocaleDateString(),
-            },
-          ]);
-        }}
-      />
+      <AddDreamButton onPress={() => router.push('/add-dream')} />
     </SafeAreaView>
   );
 }
