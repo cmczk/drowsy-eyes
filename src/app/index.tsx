@@ -1,17 +1,62 @@
-import { Text, View, StyleSheet } from "react-native";
+import { AddDreamButton } from '@/components/AddDreamButton';
+import { DreamList } from '@/components/DreamList';
+import { Header } from '@/components/Header';
+import { COLORS } from '@/constants/theme';
+import { Dream } from '@/models/Dream';
+import { useState } from 'react';
+import { StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const initialDreams = [
+  {
+    id: 1,
+    title: '2026-09-03 Кошмар',
+  },
+  {
+    id: 2,
+    title: '2026-09-03 Единороги',
+  },
+  {
+    id: 3,
+    title: '2026-09-03 Секс',
+  },
+  {
+    id: 4,
+    title: '2026-09-03 Школа',
+  },
+  {
+    id: 5,
+    title: '2026-09-03 Венеция',
+  },
+];
 
 export default function Index() {
+  const [dreams, setDreams] = useState<Dream[]>(initialDreams);
+
   return (
-    <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <Header />
+      <DreamList dreams={dreams} />
+      <AddDreamButton
+        onPress={() => {
+          setDreams([
+            ...dreams,
+            {
+              id: 0,
+              title: new Date().toLocaleDateString(),
+            },
+          ]);
+        }}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 20,
+    backgroundColor: COLORS.DARK.BG,
   },
 });
