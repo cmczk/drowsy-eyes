@@ -1,12 +1,14 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
+import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { COLORS } from '@/constants/theme';
+import { useDreams } from '@/context/DreamsContext';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,18 +27,44 @@ export default function AddDreamScreen() {
   const [title, setTitle] = useState(defaulTitle);
   const [text, setText] = useState('');
 
+  const { addDream } = useDreams();
+
   const canSave = title.trim().length > 0;
 
   const handleSave = () => {
-    const dream = {
-      id: Date.now(),
+    addDream({
       title: title.trim(),
       text: text.trim(),
-    };
-
-    console.log(dream);
+    });
 
     router.back();
+  };
+
+  const handleCancel = () => {
+    if (!text) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      'Сохранить сновидение?',
+      'Если выйти без сохранения, введённый текст будет потерян.',
+      [
+        {
+          text: 'Продолжить',
+          style: 'cancel',
+        },
+        {
+          text: 'Не сохранять',
+          style: 'destructive',
+          onPress: () => router.back(),
+        },
+        {
+          text: 'Сохранить',
+          onPress: handleSave,
+        },
+      ],
+    );
   };
 
   return (
@@ -45,32 +73,27 @@ export default function AddDreamScreen() {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <TextInput
+        <DrowsyTextInput
+          type="oneline"
           value={title}
           onChangeText={setTitle}
           placeholder="Название"
           placeholderTextColor="#777"
-          style={styles.titleInput}
           maxLength={100}
         />
 
-        <TextInput
+        <DrowsyTextInput
+          type="multiline"
           value={text}
           onChangeText={setText}
-          placeholder="Что снилось?"
+          placeholder="Что тебе снилось?"
           placeholderTextColor="#777"
-          style={styles.textInput}
-          multiline
           autoFocus
           textAlignVertical="top"
         />
 
         <View style={styles.footer}>
-          <DrowsyButton
-            type="cancel"
-            label="Отмена"
-            onPress={() => router.back()}
-          />
+          <DrowsyButton type="cancel" label="Отмена" onPress={handleCancel} />
 
           <DrowsyButton
             type="default"
@@ -99,18 +122,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     columnGap: 20,
-  },
-  titleInput: {
-    padding: 14,
-    color: COLORS.DARK.TEXT,
-    borderBottomWidth: 1,
-    borderColor: '#777',
-    fontSize: 18,
-  },
-  textInput: {
-    flex: 1,
-    padding: 14,
-    color: COLORS.DARK.TEXT,
-    fontSize: 16,
   },
 });

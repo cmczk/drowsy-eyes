@@ -1,4 +1,5 @@
 import { Dream } from '@/models/Dream';
+import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { DreamCard } from './DreamCard';
 
@@ -12,10 +13,20 @@ export const DreamList: React.FC<DreamListProps> = ({ dreams }) => {
       <FlatList
         contentContainerStyle={styles.dreamList}
         data={dreams}
-        keyExtractor={(dream) =>
-          `${dream.id.toString()}${Math.random().toString()}`
-        }
-        renderItem={({ item }) => <DreamCard title={item.title} />}
+        keyExtractor={(dream) => `${dream.id.toString()}`}
+        renderItem={({ item }) => (
+          <DreamCard
+            title={item.title}
+            onPress={() =>
+              router.push({
+                pathname: '/dreams/[id]',
+                params: {
+                  id: item.id.toString(),
+                },
+              })
+            }
+          />
+        )}
       />
     </View>
   );
