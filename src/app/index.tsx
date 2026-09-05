@@ -56,7 +56,7 @@ export default function Index() {
   }
 
   const filteredDreams = dreams.filter((dream) =>
-    dream.title.toLowerCase().includes(searchQuery),
+    dream.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const hasDreams = dreams.length > 0;

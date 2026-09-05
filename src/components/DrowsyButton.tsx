@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { BTN_BORDER_RADIUS } from '@/constants/ui';
 import { SymbolView } from 'expo-symbols';
 import {
   StyleSheet,
@@ -84,8 +85,9 @@ export const DrowsyButton: React.FC<DrowsyButtonProps> = ({
 const styles = StyleSheet.create({
   base: {
     backgroundColor: COLORS.DARK.SECONDARY,
-    borderRadius: 18,
-    padding: 10,
+    borderRadius: BTN_BORDER_RADIUS,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   text: {
     color: COLORS.DARK.PRIMARY,
@@ -94,8 +96,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: COLORS.DARK.SECONDARY,
-    borderRadius: 18,
-    padding: 10,
+    borderRadius: BTN_BORDER_RADIUS,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   cancelText: {
     color: COLORS.DARK.SECONDARY,
