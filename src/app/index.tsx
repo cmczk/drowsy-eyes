@@ -16,7 +16,9 @@ export default function Index() {
       <StatusBar barStyle="light-content" />
       <Header />
       {dreams.length > 0 && <DreamList dreams={dreams} />}
-      {dreams.length === 0 && <DrowsyText>Добавь первое сновидение</DrowsyText>}
+      {dreams.length === 0 && (
+        <DrowsyText>Добавь первое сновидение.</DrowsyText>
+      )}
       <AddDreamButton onPress={() => router.push('/add-dream')} />
     </SafeAreaView>
   );
