@@ -23,6 +23,11 @@ const ICONS = {
     android: 'arrow_back',
     web: 'arrow_back',
   },
+  close: {
+    ios: 'xmark',
+    android: 'close',
+    web: 'close',
+  },
   edit: {
     ios: 'pencil',
     android: 'edit',
@@ -47,6 +52,7 @@ export const DrowsyButton: React.FC<DrowsyButtonProps> = ({
   type,
   label,
   icon,
+  style,
   ...props
 }) => {
   return (
@@ -56,6 +62,7 @@ export const DrowsyButton: React.FC<DrowsyButtonProps> = ({
         type === 'icon' && styles.icon,
         type === 'cancel' && styles.cancel,
         icon === 'back' && styles.back,
+        style,
       ]}
       {...props}
     >

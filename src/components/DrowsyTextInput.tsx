@@ -7,6 +7,7 @@ type DrowsyTextInputPropd = TextInputProps & {
 
 export const DrowsyTextInput: React.FC<DrowsyTextInputPropd> = ({
   type = 'oneline',
+  style,
   ...props
 }) => {
   return (
@@ -14,6 +15,7 @@ export const DrowsyTextInput: React.FC<DrowsyTextInputPropd> = ({
       style={[
         type === 'oneline' && styles.oneline,
         type === 'multiline' && styles.multiline,
+        style,
       ]}
       multiline={type === 'multiline'}
       {...props}

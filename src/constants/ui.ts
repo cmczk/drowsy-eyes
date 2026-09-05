@@ -5,3 +5,5 @@ export const MENU = {
 
 export const BORDER_WIDTH = 1;
 export const BORDER_RADIUS = 12;
+
+export const HEADER_HEIGHT = 44;

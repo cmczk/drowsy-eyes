@@ -1,5 +1,10 @@
 import { COLORS } from '@/constants/theme';
-import { BORDER_RADIUS, BORDER_WIDTH, MENU } from '@/constants/ui';
+import {
+  BORDER_RADIUS,
+  BORDER_WIDTH,
+  HEADER_HEIGHT,
+  MENU,
+} from '@/constants/ui';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -11,21 +16,33 @@ import {
 } from 'react-native';
 import { DrowsyButton } from './DrowsyButton';
 import { DrowsyText } from './DrowsyText';
+import { DrowsyTextInput } from './DrowsyTextInput';
 
 type MenuPosition = {
   top: number;
   right: number;
 };
 
-export const Header = () => {
-  const moreButtonRef = useRef<View>(null);
-  const { width: windowWidth } = useWindowDimensions();
+type HeaderProps = {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+};
 
+export const Header: React.FC<HeaderProps> = ({
+  searchQuery,
+  setSearchQuery,
+}) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({
     top: 0,
     right: 20,
   });
+
+  const [searchBarOpened, setSearchBarOpened] = useState(false);
+
+  const moreButtonRef = useRef<View>(null);
+
+  const { width: windowWidth } = useWindowDimensions();
 
   const openMenu = () => {
     moreButtonRef.current?.measureInWindow((x, y, width, height) => {
@@ -50,20 +67,51 @@ export const Header = () => {
   return (
     <>
       <View style={styles.container}>
-        <DrowsyText type="logo">Drowsy Eyes</DrowsyText>
-        <View style={styles.buttonsContainer}>
-          <DrowsyButton type="icon" icon="search" />
-
-          <View ref={moreButtonRef} collapsable={false}>
+        {searchBarOpened ? (
+          <View style={styles.searchBar}>
+            <DrowsyTextInput
+              autoFocus
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Искать"
+              placeholderTextColor="#777"
+              maxLength={100}
+            />
             <DrowsyButton
+              style={styles.closeBtn}
               type="icon"
-              icon="more"
-              onPress={openMenu}
-              accessibilityLabel="Открыть меню"
-              accessibilityRole="button"
+              icon="close"
+              onPress={() => {
+                setSearchBarOpened(false);
+                setSearchQuery('');
+              }}
             />
           </View>
-        </View>
+        ) : (
+          <>
+            <DrowsyText type="logo">Drowsy Eyes</DrowsyText>
+            <View style={styles.buttonsContainer}>
+              <DrowsyButton
+                type="icon"
+                icon="search"
+                onPress={() => {
+                  setSearchBarOpened(true);
+                }}
+              />
+
+              <View ref={moreButtonRef} collapsable={false}>
+                <DrowsyButton
+                  type="icon"
+                  icon="more"
+                  onPress={openMenu}
+                  accessibilityLabel="Открыть меню"
+                  accessibilityRole="button"
+                />
+              </View>
+            </View>
+          </>
+        )}
       </View>
 
       <Modal
@@ -125,6 +173,7 @@ export const Header = () => {
 
 const styles = StyleSheet.create({
   container: {
+    height: HEADER_HEIGHT,
     flexDirection: 'row',
     marginBottom: 30,
     justifyContent: 'space-between',
@@ -164,5 +213,26 @@ const styles = StyleSheet.create({
   },
   menuItemPressed: {
     backgroundColor: '#202020',
+  },
+  searchBar: {
+    flex: 1,
+    height: HEADER_HEIGHT,
+    position: 'relative',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    paddingLeft: 0,
+    paddingRight: 54,
+    borderColor: 'transparent',
+  },
+  closeBtn: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 1,
   },
 });

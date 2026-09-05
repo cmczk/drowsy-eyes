@@ -19,6 +19,8 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -53,12 +55,22 @@ export default function Index() {
     );
   }
 
+  const filteredDreams = dreams.filter((dream) =>
+    dream.title.toLowerCase().includes(searchQuery),
+  );
+
+  const hasDreams = dreams.length > 0;
+  const hasFilteredDreams = hasDreams && filteredDreams.length > 0;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <Header />
-      {dreams.length > 0 && <DreamList dreams={dreams} />}
-      {dreams.length === 0 && (
+      <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      {hasFilteredDreams ? (
+        <DreamList dreams={filteredDreams} />
+      ) : hasDreams ? (
+        <DrowsyText>Ничего не нашлось.</DrowsyText>
+      ) : (
         <DrowsyText>Добавь первое сновидение.</DrowsyText>
       )}
       <AddDreamButton onPress={() => router.push('/add-dream')} />
