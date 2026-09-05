@@ -1,10 +1,10 @@
-import { Dream } from '@/models/Dream';
+import { DreamPreview } from '@/models/dreams';
 import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { DreamCard } from './DreamCard';
 
 type DreamListProps = {
-  dreams: Dream[];
+  dreams: DreamPreview[];
 };
 
 export const DreamList: React.FC<DreamListProps> = ({ dreams }) => {

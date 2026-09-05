@@ -1,10 +1,19 @@
-import { DreamsProvider } from '@/context/DreamsContext';
+import { COLORS } from '@/constants/theme';
+import { migrateDatabase } from '@/db/migrations';
 import { Stack } from 'expo-router';
+import { SQLiteProvider } from 'expo-sqlite';
 
 export default function RootLayout() {
   return (
-    <DreamsProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+    <SQLiteProvider databaseName="drowsy-eyes.db" onInit={migrateDatabase}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: COLORS.DARK.BG,
+          },
+        }}
+      >
         <Stack.Screen name="index" />
 
         <Stack.Screen
@@ -14,6 +23,6 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </DreamsProvider>
+    </SQLiteProvider>
   );
 }

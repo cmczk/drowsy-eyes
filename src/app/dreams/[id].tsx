@@ -1,16 +1,74 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
+import { DrowsyLoading } from '@/components/DrowsyLoading';
 import { DrowsyText } from '@/components/DrowsyText';
 import { COLORS } from '@/constants/theme';
-import { useDreams } from '@/context/DreamsContext';
-import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { deleteDream, getDreamById } from '@/db/dreams-repository';
+import { Dream } from '@/models/dreams';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { dreams } = useDreams();
+  const dreamId = Number(id);
+  const db = useSQLiteContext();
 
-  const dream = dreams.find((item) => item.id === Number(id));
+  const [dream, setDream] = useState<Dream | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
+      setLoadError(false);
+
+      async function loadDream() {
+        if (!Number.isInteger(dreamId) || dreamId <= 0) {
+          if (!cancelled) {
+            setDream(null);
+            setIsLoading(false);
+          }
+
+          return;
+        }
+
+        try {
+          const result = await getDreamById(db, dreamId);
+
+          if (!cancelled) {
+            setDream(result);
+          }
+        } catch {
+          if (!cancelled) {
+            setLoadError(true);
+          }
+        } finally {
+          if (!cancelled) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      void loadDream();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [db, dreamId]),
+  );
+
+  if (isLoading) return <DrowsyLoading />;
+
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <DrowsyText>Не удалось загрузить сновидение.</DrowsyText>
+      </SafeAreaView>
+    );
+  }
 
   if (!dream) {
     return (
@@ -20,17 +78,49 @@ export default function DreamScreen() {
     );
   }
 
+  const handleDelete = () => {
+    Alert.alert(
+      'Удалить сновидение?',
+      'Ваше сновидение будет удалено навсегда.',
+      [
+        {
+          text: 'Удалить',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDream(db, dreamId);
+              router.dismissTo('/');
+            } catch {
+              Alert.alert('Ошибка', 'Не удалось удалить сновидение.');
+            }
+          },
+        },
+        {
+          text: 'Отмена',
+          style: 'cancel',
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.btnContainer}>
         <DrowsyButton type="icon" icon="back" onPress={() => router.back()} />
         <View style={styles.editDeleteContainer}>
-          <DrowsyButton type="icon" icon="edit" onPress={() => router.back()} />
           <DrowsyButton
             type="icon"
-            icon="delete"
-            onPress={() => router.back()}
+            icon="edit"
+            onPress={() =>
+              router.push({
+                pathname: '/dreams/[id]/edit',
+                params: {
+                  id: dreamId.toString(),
+                },
+              })
+            }
           />
+          <DrowsyButton type="icon" icon="delete" onPress={handleDelete} />
         </View>
       </View>
 

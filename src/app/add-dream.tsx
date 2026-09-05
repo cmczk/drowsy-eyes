@@ -1,8 +1,9 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { COLORS } from '@/constants/theme';
-import { useDreams } from '@/context/DreamsContext';
+import { insertDream } from '@/db/dreams-repository';
 import { router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import {
   Alert,
@@ -13,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-function defaulTitle() {
+function defaultTitle() {
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -24,20 +25,24 @@ function defaulTitle() {
 }
 
 export default function AddDreamScreen() {
-  const [title, setTitle] = useState(defaulTitle);
-  const [text, setText] = useState('');
+  const db = useSQLiteContext();
 
-  const { addDream } = useDreams();
+  const [title, setTitle] = useState(defaultTitle);
+  const [text, setText] = useState('');
 
   const canSave = title.trim().length > 0;
 
-  const handleSave = () => {
-    addDream({
-      title: title.trim(),
-      text: text.trim(),
-    });
+  const handleSave = async () => {
+    try {
+      await insertDream(db, {
+        title: title.trim(),
+        text: text.trim(),
+      });
 
-    router.back();
+      router.back();
+    } catch {
+      Alert.alert('Ошибка', 'Не удалось сохранить сновидение.');
+    }
   };
 
   const handleCancel = () => {
