@@ -5,16 +5,13 @@ import { DrowsyText } from '@/components/DrowsyText';
 import { Header } from '@/components/Header';
 import { COLORS } from '@/constants/theme';
 import { getDreams } from '@/db/dreams-repository';
-import { DreamPreview } from '@/models/dreams';
+import { DreamPreview } from '@/db/schema';
 import { router, useFocusEffect } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
-  const db = useSQLiteContext();
-
   const [dreams, setDreams] = useState<DreamPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -27,7 +24,7 @@ export default function Index() {
 
       async function loadDreams() {
         try {
-          const result = await getDreams(db);
+          const result = await getDreams();
 
           if (!cancelled) setDreams(result);
         } catch {
@@ -42,7 +39,7 @@ export default function Index() {
       return () => {
         cancelled = true;
       };
-    }, [db]),
+    }, []),
   );
 
   if (isLoading) return <DrowsyLoading />;

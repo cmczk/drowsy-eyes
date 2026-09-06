@@ -4,9 +4,8 @@ import { DrowsyText } from '@/components/DrowsyText';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { COLORS } from '@/constants/theme';
 import { getDreamById, updateDream } from '@/db/dreams-repository';
-import { Dream } from '@/models/dreams';
+import { Dream } from '@/db/schema';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -20,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function EditDreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
-  const db = useSQLiteContext();
 
   const [dream, setDream] = useState<Dream | null>(null);
   const [title, setTitle] = useState('');
@@ -48,7 +46,7 @@ export default function EditDreamScreen() {
       }
 
       try {
-        const result = await getDreamById(db, dreamId);
+        const result = await getDreamById(dreamId);
 
         if (!cancelled) {
           setDream(result);
@@ -74,7 +72,7 @@ export default function EditDreamScreen() {
     return () => {
       cancelled = true;
     };
-  }, [db, id]);
+  }, [dreamId]);
 
   if (isLoading) return <DrowsyLoading />;
 
@@ -98,7 +96,7 @@ export default function EditDreamScreen() {
     if (!dream || !canSave) return;
 
     try {
-      await updateDream(db, {
+      await updateDream({
         id: dreamId,
         title: title.trim(),
         text: text.trim(),

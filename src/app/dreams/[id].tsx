@@ -3,9 +3,8 @@ import { DrowsyLoading } from '@/components/DrowsyLoading';
 import { DrowsyText } from '@/components/DrowsyText';
 import { COLORS } from '@/constants/theme';
 import { deleteDream, getDreamById } from '@/db/dreams-repository';
-import { Dream } from '@/models/dreams';
+import { Dream } from '@/db/schema';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function DreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
-  const db = useSQLiteContext();
 
   const [dream, setDream] = useState<Dream | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +34,7 @@ export default function DreamScreen() {
         }
 
         try {
-          const result = await getDreamById(db, dreamId);
+          const result = await getDreamById(dreamId);
 
           if (!cancelled) {
             setDream(result);
@@ -57,7 +55,7 @@ export default function DreamScreen() {
       return () => {
         cancelled = true;
       };
-    }, [db, dreamId]),
+    }, [dreamId]),
   );
 
   if (isLoading) return <DrowsyLoading />;
@@ -88,7 +86,7 @@ export default function DreamScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteDream(db, dreamId);
+              await deleteDream(dreamId);
               router.dismissTo('/');
             } catch {
               Alert.alert('Ошибка', 'Не удалось удалить сновидение.');

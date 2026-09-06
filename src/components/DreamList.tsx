@@ -1,4 +1,4 @@
-import { DreamPreview } from '@/models/dreams';
+import { DreamPreview } from '@/db/schema';
 import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { DreamCard } from './DreamCard';

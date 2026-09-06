@@ -3,7 +3,6 @@ import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { COLORS } from '@/constants/theme';
 import { insertDream } from '@/db/dreams-repository';
 import { router } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import {
   Alert,
@@ -25,8 +24,6 @@ function defaultTitle() {
 }
 
 export default function AddDreamScreen() {
-  const db = useSQLiteContext();
-
   const [title, setTitle] = useState(defaultTitle);
   const [text, setText] = useState('');
 
@@ -34,7 +31,7 @@ export default function AddDreamScreen() {
 
   const handleSave = async () => {
     try {
-      await insertDream(db, {
+      await insertDream({
         title: title.trim(),
         text: text.trim(),
       });
