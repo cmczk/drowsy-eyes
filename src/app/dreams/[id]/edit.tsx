@@ -146,7 +146,7 @@ export default function EditDreamScreen() {
           value={title}
           onChangeText={setTitle}
           placeholder="Название"
-          placeholderTextColor="#777"
+          placeholderTextColor={COLORS.DARK.MUTED}
           maxLength={100}
         />
 
@@ -155,7 +155,7 @@ export default function EditDreamScreen() {
           value={text}
           onChangeText={setText}
           placeholder="Что тебе снилось?"
-          placeholderTextColor="#777"
+          placeholderTextColor={COLORS.DARK.MUTED}
           autoFocus
           textAlignVertical="top"
         />

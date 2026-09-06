@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   },
   emptyStateTxt: {
     fontSize: 32,
-    color: COLORS.DARK.MUTED_TEXT,
+    color: COLORS.DARK.MUTED,
     textAlign: 'center',
     paddingBottom: 100,
   },

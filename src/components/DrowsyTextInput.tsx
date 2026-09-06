@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     padding: 14,
     color: COLORS.DARK.TEXT,
     borderBottomWidth: 1,
-    borderColor: '#777',
+    borderColor: COLORS.DARK.MUTED,
     fontSize: 18,
   },
   multiline: {

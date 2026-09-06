@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Искать"
-              placeholderTextColor="#777"
+              placeholderTextColor={COLORS.DARK.MUTED}
               maxLength={100}
             />
             <DrowsyButton
