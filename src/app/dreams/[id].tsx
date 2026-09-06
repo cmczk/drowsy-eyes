@@ -131,6 +131,7 @@ export default function DreamScreen() {
           {dream.tags.map((tag) => {
             return (
               <TagPlate
+                key={tag.title}
                 style={styles.tagPlate}
                 type="readonly"
                 title={tag.title}

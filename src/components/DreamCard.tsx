@@ -28,6 +28,7 @@ export const DreamCard: React.FC<DreamCardProps> = ({
           {tags.map((tag) => {
             return (
               <TagPlate
+                key={tag.title}
                 style={styles.tagPlate}
                 type="readonly"
                 title={tag.title}

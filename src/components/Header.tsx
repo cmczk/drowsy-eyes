@@ -132,15 +132,18 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
               />
 
-              <View ref={filterButtonRef} collapsable={false}>
-                <DrowsyButton
-                  type="icon"
-                  icon="filter"
-                  onPress={openFilter}
-                  accessibilityLabel="Фильтровать по тегам"
-                  accessibilityRole="button"
-                />
-              </View>
+              {tags.length > 0 && (
+                <View ref={filterButtonRef} collapsable={false}>
+                  <DrowsyButton
+                    type="icon"
+                    icon="filter"
+                    onPress={openFilter}
+                    accessibilityLabel="Фильтровать по тегам"
+                    accessibilityRole="button"
+                  />
+                </View>
+              )}
+
               <View ref={moreButtonRef} collapsable={false}>
                 <DrowsyButton
                   type="icon"
