@@ -5,7 +5,8 @@ import { DrowsyText } from '@/components/DrowsyText';
 import { Header } from '@/components/Header';
 import { COLORS } from '@/constants/theme';
 import { getDreams } from '@/db/dreams-repository';
-import { DreamPreview } from '@/db/schema';
+import { DreamPreview, TagPreview } from '@/db/schema';
+import { getTags } from '@/db/tags-repository';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
@@ -13,10 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
   const [dreams, setDreams] = useState<DreamPreview[]>([]);
+  const [tags, setTags] = useState<TagPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -24,9 +27,15 @@ export default function Index() {
 
       async function loadDreams() {
         try {
-          const result = await getDreams();
+          const [dreamsResult, tagsResult] = await Promise.all([
+            getDreams(),
+            getTags(),
+          ]);
 
-          if (!cancelled) setDreams(result);
+          if (!cancelled) {
+            setDreams(dreamsResult);
+            setTags(tagsResult);
+          }
         } catch {
           if (!cancelled) setLoadError(true);
         } finally {
@@ -52,9 +61,21 @@ export default function Index() {
     );
   }
 
-  const filteredDreams = dreams.filter((dream) =>
-    dream.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredDreams = dreams.filter(
+    (dream) =>
+      dream.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      selectedTagIds.every((selectedTagId) =>
+        dream.tags.some((tag) => tag.id === selectedTagId),
+      ),
   );
+
+  const handleTagToggle = (tagId: number) => {
+    setSelectedTagIds((currentTagIds) =>
+      currentTagIds.includes(tagId)
+        ? currentTagIds.filter((currentTagId) => currentTagId !== tagId)
+        : [...currentTagIds, tagId],
+    );
+  };
 
   const hasDreams = dreams.length > 0;
   const hasFilteredDreams = hasDreams && filteredDreams.length > 0;
@@ -62,7 +83,14 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <Header
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        tags={tags}
+        selectedTagIds={selectedTagIds}
+        onTagToggle={handleTagToggle}
+        onResetFilter={() => setSelectedTagIds([])}
+      />
       {hasFilteredDreams ? (
         <DreamList dreams={filteredDreams} />
       ) : hasDreams ? (

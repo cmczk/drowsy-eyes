@@ -14,6 +14,11 @@ const ICONS = {
     android: 'search',
     web: 'search',
   },
+  filter: {
+    ios: 'line.3.horizontal.decrease',
+    android: 'filter_list',
+    web: 'filter_list',
+  },
   more: {
     ios: 'ellipsis',
     android: 'more_vert',

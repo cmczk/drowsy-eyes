@@ -23,18 +23,20 @@ export const DreamCard: React.FC<DreamCardProps> = ({
   return (
     <TouchableOpacity style={styles.dreamCard} {...props}>
       <DrowsyText type="title">{title}</DrowsyText>
-      <View style={styles.platesList}>
-        {tags.map((tag) => {
-          return (
-            <TagPlate
-              style={styles.tagPlate}
-              type="readonly"
-              title={tag.title}
-              color={tag.color}
-            />
-          );
-        })}
-      </View>
+      {tags.length > 0 && (
+        <View style={styles.platesList}>
+          {tags.map((tag) => {
+            return (
+              <TagPlate
+                style={styles.tagPlate}
+                type="readonly"
+                title={tag.title}
+                color={tag.color}
+              />
+            );
+          })}
+        </View>
+      )}
     </TouchableOpacity>
   );
 };

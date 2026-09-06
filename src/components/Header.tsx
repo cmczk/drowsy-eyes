@@ -5,11 +5,13 @@ import {
   HEADER_HEIGHT,
   MENU,
 } from '@/constants/ui';
+import { TagPreview } from '@/db/schema';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -17,6 +19,7 @@ import {
 import { DrowsyButton } from './DrowsyButton';
 import { DrowsyText } from './DrowsyText';
 import { DrowsyTextInput } from './DrowsyTextInput';
+import { TagPlate } from './TagPlate';
 
 type MenuPosition = {
   top: number;
@@ -26,14 +29,27 @@ type MenuPosition = {
 type HeaderProps = {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  tags: TagPreview[];
+  selectedTagIds: number[];
+  onTagToggle: (tagId: number) => void;
+  onResetFilter: () => void;
 };
 
 export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery,
+  tags,
+  selectedTagIds,
+  onTagToggle,
+  onResetFilter,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({
+    top: 0,
+    right: 20,
+  });
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [filterPosition, setFilterPosition] = useState<MenuPosition>({
     top: 0,
     right: 20,
   });
@@ -41,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [searchBarOpened, setSearchBarOpened] = useState(false);
 
   const moreButtonRef = useRef<View>(null);
+  const filterButtonRef = useRef<View>(null);
 
   const { width: windowWidth } = useWindowDimensions();
 
@@ -57,6 +74,21 @@ export const Header: React.FC<HeaderProps> = ({
 
   const closeMenu = () => {
     setMenuVisible(false);
+  };
+
+  const openFilter = () => {
+    filterButtonRef.current?.measureInWindow((x, y, width, height) => {
+      setFilterPosition({
+        top: y + height + MENU.GAP,
+        right: Math.max(8, windowWidth - x - width),
+      });
+    });
+
+    setFilterVisible(true);
+  };
+
+  const closeFilter = () => {
+    setFilterVisible(false);
   };
 
   const handleAboutPress = () => {
@@ -100,6 +132,15 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
               />
 
+              <View ref={filterButtonRef} collapsable={false}>
+                <DrowsyButton
+                  type="icon"
+                  icon="filter"
+                  onPress={openFilter}
+                  accessibilityLabel="Фильтровать по тегам"
+                  accessibilityRole="button"
+                />
+              </View>
               <View ref={moreButtonRef} collapsable={false}>
                 <DrowsyButton
                   type="icon"
@@ -167,6 +208,67 @@ export const Header: React.FC<HeaderProps> = ({
           </View>
         </View>
       </Modal>
+
+      <Modal
+        transparent
+        visible={filterVisible}
+        animationType="fade"
+        onRequestClose={closeFilter}
+      >
+        <View style={styles.overlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={closeFilter}
+            accessibilityLabel="Закрыть фильтр"
+          />
+
+          <View
+            accessibilityViewIsModal
+            style={[
+              styles.menu,
+              styles.filterMenu,
+              {
+                top: filterPosition.top,
+                right: 20,
+                width: windowWidth - 40,
+              },
+            ]}
+          >
+            <ScrollView
+              style={styles.filterTagsScroll}
+              contentContainerStyle={styles.filterTags}
+              showsVerticalScrollIndicator={false}
+            >
+              {tags.map((tag) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+
+                return (
+                  <TagPlate
+                    key={tag.id}
+                    type="readonly"
+                    title={tag.title}
+                    color={tag.color}
+                    onPress={() => onTagToggle(tag.id)}
+                    style={[
+                      styles.filterTag,
+                      isSelected && styles.selectedFilterTag,
+                    ]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isSelected }}
+                  />
+                );
+              })}
+            </ScrollView>
+
+            <DrowsyButton
+              type="cancel"
+              label="Сбросить фильтры"
+              onPress={onResetFilter}
+              style={styles.resetFilterButton}
+            />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -213,6 +315,29 @@ const styles = StyleSheet.create({
   },
   menuItemPressed: {
     backgroundColor: '#202020',
+  },
+  filterMenu: {
+    padding: 12,
+    gap: 12,
+  },
+  filterTagsScroll: {
+    maxHeight: 240,
+  },
+  filterTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterTag: {
+    alignSelf: 'flex-start',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedFilterTag: {
+    borderColor: COLORS.DARK.MUTED,
+  },
+  resetFilterButton: {
+    alignItems: 'center',
   },
   searchBar: {
     flex: 1,
