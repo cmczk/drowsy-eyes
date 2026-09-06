@@ -1,16 +1,51 @@
 import { desc, eq } from 'drizzle-orm';
 import { db } from './client';
-import { Dream, DreamPreview, dreams, NewDream, UpdateDream } from './schema';
+import {
+  Dream,
+  DreamPreview,
+  dreams,
+  dreamTags,
+  NewDream,
+  tags,
+  UpdateDream,
+} from './schema';
 
 export async function getDreams(): Promise<DreamPreview[]> {
-  return db
+  const rows = await db
     .select({
-      id: dreams.id,
-      title: dreams.title,
-      createdAt: dreams.createdAt,
+      dream: {
+        id: dreams.id,
+        title: dreams.title,
+        createdAt: dreams.createdAt,
+      },
+      tag: {
+        id: tags.id,
+        title: tags.title,
+        color: tags.color,
+        createdAt: tags.createdAt,
+      },
     })
     .from(dreams)
+    .leftJoin(dreamTags, eq(dreamTags.dreamId, dreams.id))
+    .leftJoin(tags, eq(tags.id, dreamTags.tagId))
     .orderBy(desc(dreams.createdAt));
+
+  const dreamsById = new Map<number, DreamPreview>();
+
+  rows.forEach((row) => {
+    let dream = dreamsById.get(row.dream.id);
+
+    if (!dream) {
+      dream = { ...row.dream, tags: [] };
+      dreamsById.set(dream.id, dream);
+    }
+
+    if (row.tag) {
+      dream.tags.push(row.tag);
+    }
+  });
+
+  return Array.from(dreamsById.values());
 }
 
 export async function getDreamById(id: number): Promise<Dream | null> {
