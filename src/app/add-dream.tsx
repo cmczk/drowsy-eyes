@@ -84,6 +84,7 @@ export default function AddDreamScreen() {
           onChangeText={setTitle}
           placeholder="Название"
           placeholderTextColor="#777"
+          autoFocus
           maxLength={100}
         />
 
@@ -93,7 +94,6 @@ export default function AddDreamScreen() {
           onChangeText={setText}
           placeholder="Что тебе снилось?"
           placeholderTextColor="#777"
-          autoFocus
           textAlignVertical="top"
         />
 
