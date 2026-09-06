@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { db } from './client';
 import {
   Dream,
@@ -48,45 +48,212 @@ export async function getDreams(): Promise<DreamPreview[]> {
   return Array.from(dreamsById.values());
 }
 
-export async function getDreamById(id: number): Promise<Dream | null> {
-  const [dream] = await db
-    .select()
+export async function getDreamById(
+  id: number,
+): Promise<(Dream & Pick<DreamPreview, 'tags'>) | null> {
+  const rows = await db
+    .select({
+      dream: {
+        id: dreams.id,
+        title: dreams.title,
+        text: dreams.text,
+        createdAt: dreams.createdAt,
+        updatedAt: dreams.updatedAt,
+      },
+      tag: {
+        id: tags.id,
+        title: tags.title,
+        color: tags.color,
+        createdAt: tags.createdAt,
+      },
+    })
     .from(dreams)
-    .where(eq(dreams.id, id))
-    .limit(1);
+    .leftJoin(dreamTags, eq(dreamTags.dreamId, dreams.id))
+    .leftJoin(tags, eq(tags.id, dreamTags.tagId))
+    .where(eq(dreams.id, id));
 
-  return dream ?? null;
+  if (rows.length === 0) return null;
+
+  return {
+    ...rows[0].dream,
+    tags: rows.flatMap((row) => (row.tag ? [row.tag] : [])),
+  };
 }
 
 export async function insertDream(data: NewDream): Promise<Dream> {
   const now = new Date();
+  const { tags: inputTags, ...dreamData } = data;
 
-  const [dream] = await db
-    .insert(dreams)
-    .values({
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
+  return db.transaction((tx) => {
+    const dream = tx
+      .insert(dreams)
+      .values({
+        ...dreamData,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning()
+      .all()[0];
 
-  if (!dream) throw new Error('Dream was not inseted.');
+    if (!dream) {
+      throw new Error('Dream was not inserted.');
+    }
 
-  return dream;
+    // В будущем сюда попадут теги, выбранные из выпадающего списка.
+    const existingTagIds = inputTags
+      .map((tag) => tag.id)
+      .filter((id): id is number => id !== null);
+
+    const tagsToUpsert = inputTags
+      .filter((tag) => tag.id === null)
+      .map((tag) => ({
+        title: tag.title.trim(),
+        color: tag.color,
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+    if (tagsToUpsert.some((tag) => !tag.title)) {
+      throw new Error('Tag title cannot be empty.');
+    }
+
+    const upsertedTagIds =
+      tagsToUpsert.length === 0
+        ? []
+        : tx
+            .insert(tags)
+            .values(tagsToUpsert)
+            .onConflictDoUpdate({
+              target: tags.title,
+              set: {
+                color: sql.raw(`excluded.${tags.color.name}`),
+                updatedAt: now,
+              },
+            })
+            .returning({ id: tags.id })
+            .all()
+            .map((tag) => tag.id);
+
+    const tagIds = [...new Set([...existingTagIds, ...upsertedTagIds])];
+
+    if (tagIds.length > 0) {
+      tx.insert(dreamTags)
+        .values(
+          tagIds.map((tagId) => ({
+            dreamId: dream.id,
+            tagId,
+          })),
+        )
+        .run();
+    }
+
+    return dream;
+  });
 }
 
-export async function updateDream({ title, text, id }: UpdateDream) {
-  const [dream] = await db
-    .update(dreams)
-    .set({
-      title: title,
-      text: text,
-      updatedAt: new Date(),
-    })
-    .where(eq(dreams.id, id))
-    .returning();
+export async function updateDream({
+  title,
+  text,
+  id,
+  tags: inputTags,
+}: UpdateDream) {
+  const now = new Date();
 
-  return dream ?? null;
+  return db.transaction((tx) => {
+    const dream = tx
+      .update(dreams)
+      .set({
+        title: title,
+        text: text,
+        updatedAt: now,
+      })
+      .where(eq(dreams.id, id))
+      .returning()
+      .all()[0];
+
+    if (!dream) return null;
+
+    const existingTagsToUpsert = inputTags.flatMap((tag) =>
+      tag.id === null
+        ? []
+        : [
+            {
+              id: tag.id,
+              title: tag.title.trim(),
+              color: tag.color,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+    );
+
+    const newTagsToUpsert = inputTags.flatMap((tag) =>
+      tag.id !== null
+        ? []
+        : [
+            {
+              title: tag.title.trim(),
+              color: tag.color,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+    );
+
+    if (
+      existingTagsToUpsert.some((tag) => !tag.title) ||
+      newTagsToUpsert.some((tag) => !tag.title)
+    ) {
+      throw new Error('Tag title cannot be empty.');
+    }
+
+    if (existingTagsToUpsert.length > 0) {
+      tx.insert(tags)
+        .values(existingTagsToUpsert)
+        .onConflictDoUpdate({
+          target: tags.id,
+          set: {
+            color: sql.raw(`excluded.${tags.color.name}`),
+            updatedAt: now,
+          },
+        })
+        .run();
+    }
+
+    const upsertedTagIds =
+      newTagsToUpsert.length === 0
+        ? []
+        : tx
+            .insert(tags)
+            .values(newTagsToUpsert)
+            .onConflictDoUpdate({
+              target: tags.title,
+              set: {
+                color: sql.raw(`excluded.${tags.color.name}`),
+                updatedAt: now,
+              },
+            })
+            .returning({ id: tags.id })
+            .all()
+            .map((tag) => tag.id);
+
+    const tagIds = [
+      ...new Set([
+        ...existingTagsToUpsert.map((tag) => tag.id),
+        ...upsertedTagIds,
+      ]),
+    ];
+
+    tx.delete(dreamTags).where(eq(dreamTags.dreamId, id)).run();
+
+    if (tagIds.length > 0) {
+      tx.insert(dreamTags)
+        .values(tagIds.map((tagId) => ({ dreamId: id, tagId })))
+        .run();
+    }
+
+    return dream;
+  });
 }
 
 export async function deleteDream(id: number) {

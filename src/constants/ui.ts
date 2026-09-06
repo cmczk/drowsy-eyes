@@ -1,3 +1,7 @@
+export const TEXT = {
+  TITLE_SIZE: 24,
+};
+
 export const MENU = {
   WIDTH: 222,
   GAP: 6,

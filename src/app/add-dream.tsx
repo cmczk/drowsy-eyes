@@ -1,5 +1,7 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
+import { TagColorSelector } from '@/components/TagColorSelector';
+import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { insertDream } from '@/db/dreams-repository';
 import { router } from 'expo-router';
@@ -26,6 +28,35 @@ function defaultTitle() {
 export default function AddDreamScreen() {
   const [title, setTitle] = useState(defaultTitle);
   const [text, setText] = useState('');
+  const [newTagTitle, setNewTagTitle] = useState('');
+  const [tagsForDream, setTagsForDream] = useState<
+    { id: number | null; title: string; color: string | null }[]
+  >([]);
+  const [tagForColoring, setTagForColoring] = useState<string | null>(null);
+
+  const handleAddTag = () => {
+    const tagTitle = newTagTitle.trim();
+    if (!tagTitle) return;
+
+    setTagsForDream((currentTags) => {
+      const alreadyAdded = currentTags.some(
+        (currentTag) =>
+          currentTag.title.toLowerCase() === tagTitle.toLowerCase(),
+      );
+
+      return alreadyAdded
+        ? currentTags
+        : [...currentTags, { id: null, title: tagTitle, color: null }];
+    });
+
+    setNewTagTitle('');
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTagsForDream((currentTags) =>
+      currentTags.filter((tag) => tag.title !== tagToRemove),
+    );
+  };
 
   const canSave = title.trim().length > 0;
 
@@ -34,6 +65,7 @@ export default function AddDreamScreen() {
       await insertDream({
         title: title.trim(),
         text: text.trim(),
+        tags: tagsForDream,
       });
 
       router.back();
@@ -74,6 +106,7 @@ export default function AddDreamScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        onTouchStart={() => setTagForColoring(null)}
       >
         <DrowsyTextInput
           type="oneline"
@@ -84,6 +117,59 @@ export default function AddDreamScreen() {
           autoFocus
           maxLength={100}
         />
+
+        <DrowsyTextInput
+          type="oneline"
+          value={newTagTitle}
+          onChangeText={setNewTagTitle}
+          onSubmitEditing={handleAddTag}
+          submitBehavior="submit"
+          returnKeyType="done"
+          placeholder="Теги"
+          placeholderTextColor={COLORS.DARK.MUTED}
+          maxLength={100}
+        />
+
+        {tagsForDream.length > 0 && (
+          <View style={styles.tagList}>
+            {tagsForDream.map((tag) => {
+              const isColorSelectorOpen = tagForColoring === tag.title;
+
+              return (
+                <View
+                  key={tag.title}
+                  style={[
+                    styles.tagWrapper,
+                    isColorSelectorOpen && styles.activeTagWrapper,
+                  ]}
+                >
+                  <TagPlate
+                    title={tag.title}
+                    color={tag.color}
+                    onPress={() => setTagForColoring(tag.title)}
+                    onCrossPress={() => handleRemoveTag(tag.title)}
+                  />
+
+                  {isColorSelectorOpen && (
+                    <TagColorSelector
+                      onColorSelect={(color) => {
+                        setTagsForDream((currentTags) =>
+                          currentTags.map((currentTag) =>
+                            currentTag.title === tag.title
+                              ? { ...currentTag, color }
+                              : currentTag,
+                          ),
+                        );
+
+                        setTagForColoring(null);
+                      }}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <DrowsyTextInput
           type="multiline"
@@ -124,5 +210,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     columnGap: 20,
+  },
+  tagList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  tagWrapper: {
+    position: 'relative',
+  },
+
+  activeTagWrapper: {
+    zIndex: 20,
   },
 });

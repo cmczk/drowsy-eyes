@@ -2,9 +2,11 @@ import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyLoading } from '@/components/DrowsyLoading';
 import { DrowsyText } from '@/components/DrowsyText';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
+import { TagColorSelector } from '@/components/TagColorSelector';
+import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { getDreamById, updateDream } from '@/db/dreams-repository';
-import { Dream } from '@/db/schema';
+import { Dream, DreamPreview } from '@/db/schema';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -20,15 +22,36 @@ export default function EditDreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
 
-  const [dream, setDream] = useState<Dream | null>(null);
+  const [dream, setDream] = useState<
+    (Dream & Pick<DreamPreview, 'tags'>) | null
+  >(null);
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
+  const [newTagTitle, setNewTagTitle] = useState('');
+  const [tagsForDream, setTagsForDream] = useState<
+    { id: number | null; title: string; color: string | null }[]
+  >([]);
+  const [tagForColoring, setTagForColoring] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   const canSave = title.trim().length > 0;
-  const hasChanges = dream && (title !== dream.title || text !== dream.text);
+  const hasChanges =
+    dream &&
+    (title !== dream.title ||
+      text !== dream.text ||
+      tagsForDream.length !== dream.tags.length ||
+      tagsForDream.some((tag, index) => {
+        const originalTag = dream.tags[index];
+
+        return (
+          !originalTag ||
+          tag.id !== originalTag.id ||
+          tag.title !== originalTag.title ||
+          tag.color !== originalTag.color
+        );
+      }));
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +77,9 @@ export default function EditDreamScreen() {
           if (result) {
             setTitle(result.title);
             setText(result.text);
+            setTagsForDream(
+              result.tags.map(({ id, title, color }) => ({ id, title, color })),
+            );
           }
         }
       } catch {
@@ -92,6 +118,30 @@ export default function EditDreamScreen() {
     );
   }
 
+  const handleAddTag = () => {
+    const tagTitle = newTagTitle.trim();
+    if (!tagTitle) return;
+
+    setTagsForDream((currentTags) => {
+      const alreadyAdded = currentTags.some(
+        (currentTag) =>
+          currentTag.title.toLowerCase() === tagTitle.toLowerCase(),
+      );
+
+      return alreadyAdded
+        ? currentTags
+        : [...currentTags, { id: null, title: tagTitle, color: null }];
+    });
+
+    setNewTagTitle('');
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTagsForDream((currentTags) =>
+      currentTags.filter((tag) => tag.title !== tagToRemove),
+    );
+  };
+
   const handleEdit = async () => {
     if (!dream || !canSave) return;
 
@@ -100,11 +150,13 @@ export default function EditDreamScreen() {
         id: dreamId,
         title: title.trim(),
         text: text.trim(),
+        tags: tagsForDream,
       });
 
       router.back();
-    } catch {
+    } catch (error) {
       Alert.alert('Ошибка', 'Не удалось обновить сновидение.');
+      console.log(error);
     }
   };
 
@@ -140,6 +192,7 @@ export default function EditDreamScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        onTouchStart={() => setTagForColoring(null)}
       >
         <DrowsyTextInput
           type="oneline"
@@ -149,6 +202,59 @@ export default function EditDreamScreen() {
           placeholderTextColor={COLORS.DARK.MUTED}
           maxLength={100}
         />
+
+        <DrowsyTextInput
+          type="oneline"
+          value={newTagTitle}
+          onChangeText={setNewTagTitle}
+          onSubmitEditing={handleAddTag}
+          submitBehavior="submit"
+          returnKeyType="done"
+          placeholder="Теги"
+          placeholderTextColor={COLORS.DARK.MUTED}
+          maxLength={100}
+        />
+
+        {tagsForDream.length > 0 && (
+          <View style={styles.tagList}>
+            {tagsForDream.map((tag) => {
+              const isColorSelectorOpen = tagForColoring === tag.title;
+
+              return (
+                <View
+                  key={tag.title}
+                  style={[
+                    styles.tagWrapper,
+                    isColorSelectorOpen && styles.activeTagWrapper,
+                  ]}
+                >
+                  <TagPlate
+                    title={tag.title}
+                    color={tag.color}
+                    onPress={() => setTagForColoring(tag.title)}
+                    onCrossPress={() => handleRemoveTag(tag.title)}
+                  />
+
+                  {isColorSelectorOpen && (
+                    <TagColorSelector
+                      onColorSelect={(color) => {
+                        setTagsForDream((currentTags) =>
+                          currentTags.map((currentTag) =>
+                            currentTag.title === tag.title
+                              ? { ...currentTag, color }
+                              : currentTag,
+                          ),
+                        );
+
+                        setTagForColoring(null);
+                      }}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <DrowsyTextInput
           type="multiline"
@@ -184,11 +290,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.DARK.PRIMARY,
     padding: 20,
+    gap: 20,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     columnGap: 20,
+  },
+  tagList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  tagWrapper: {
+    position: 'relative',
+  },
+
+  activeTagWrapper: {
+    zIndex: 20,
   },
 });

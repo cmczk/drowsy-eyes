@@ -17,6 +17,7 @@ export const DreamList: React.FC<DreamListProps> = ({ dreams }) => {
         renderItem={({ item }) => (
           <DreamCard
             title={item.title}
+            tags={item.tags}
             onPress={() =>
               router.push({
                 pathname: '/dreams/[id]',

@@ -2,7 +2,7 @@ import { COLORS } from '@/constants/theme';
 import { StyleSheet, Text, TextProps } from 'react-native';
 
 type DrowsyTextProps = TextProps & {
-  type?: 'simple' | 'logo' | 'heading';
+  type?: 'simple' | 'logo' | 'heading' | 'title';
 };
 
 export const DrowsyText: React.FC<DrowsyTextProps> = ({
@@ -16,6 +16,7 @@ export const DrowsyText: React.FC<DrowsyTextProps> = ({
         styles.default,
         type === 'logo' && styles.logo,
         type === 'heading' && styles.heading,
+        type === 'title' && styles.title,
         style,
       ]}
       {...props}
@@ -32,7 +33,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 24,
     marginBottom: 18,
+  },
+  title: {
+    fontSize: 18,
   },
 });

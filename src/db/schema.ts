@@ -45,11 +45,17 @@ export const dreamTags = sqliteTable(
 );
 
 export type Tag = typeof tags.$inferSelect;
-export type NewTag = Pick<typeof tags.$inferInsert, 'title' | 'color'>;
+export type NewTag = Pick<typeof tags.$inferInsert, 'title'>;
 export type TagPreview = Pick<Tag, 'id' | 'title' | 'color' | 'createdAt'>;
 
 export type Dream = typeof dreams.$inferSelect;
-export type NewDream = Pick<typeof dreams.$inferInsert, 'title' | 'text'>;
+export type NewDream = Pick<typeof dreams.$inferInsert, 'title' | 'text'> & {
+  tags: {
+    id: number | null;
+    title: string;
+    color: string | null;
+  }[];
+};
 export type UpdateDream = NewDream & Pick<Dream, 'id'>;
 export type DreamPreview = Pick<Dream, 'id' | 'title' | 'createdAt'> & {
   tags: TagPreview[];

@@ -1,9 +1,10 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyLoading } from '@/components/DrowsyLoading';
 import { DrowsyText } from '@/components/DrowsyText';
+import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { deleteDream, getDreamById } from '@/db/dreams-repository';
-import { Dream } from '@/db/schema';
+import { Dream, DreamPreview } from '@/db/schema';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -13,7 +14,9 @@ export default function DreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
 
-  const [dream, setDream] = useState<Dream | null>(null);
+  const [dream, setDream] = useState<
+    (Dream & Pick<DreamPreview, 'tags'>) | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -124,6 +127,18 @@ export default function DreamScreen() {
 
       <View style={styles.textContainer}>
         <DrowsyText type="heading">{dream.title}</DrowsyText>
+        <View style={styles.platesList}>
+          {dream.tags.map((tag) => {
+            return (
+              <TagPlate
+                style={styles.tagPlate}
+                type="readonly"
+                title={tag.title}
+                color={tag.color}
+              />
+            );
+          })}
+        </View>
         <DrowsyText>{dream.text}</DrowsyText>
       </View>
     </SafeAreaView>
@@ -146,5 +161,14 @@ const styles = StyleSheet.create({
   },
   editDeleteContainer: {
     flexDirection: 'row',
+  },
+  platesList: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 28,
+  },
+  tagPlate: {
+    alignSelf: 'flex-start',
   },
 });
