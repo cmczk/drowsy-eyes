@@ -4,5 +4,6 @@ export const COLORS = {
     SECONDARY: '#ffffff',
     TEXT: '#ffffff',
     BG: '#000000',
+    MUTED_TEXT: '#777777',
   },
 };

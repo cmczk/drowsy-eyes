@@ -8,7 +8,7 @@ import { getDreams } from '@/db/dreams-repository';
 import { DreamPreview } from '@/db/schema';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StatusBar, StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
@@ -68,7 +68,11 @@ export default function Index() {
       ) : hasDreams ? (
         <DrowsyText>Ничего не нашлось.</DrowsyText>
       ) : (
-        <DrowsyText>Добавь первое сновидение.</DrowsyText>
+        <View style={styles.emptyState}>
+          <DrowsyText style={styles.emptyStateTxt}>
+            Добавь первое сновидение
+          </DrowsyText>
+        </View>
       )}
       <AddDreamButton onPress={() => router.push('/add-dream')} />
     </SafeAreaView>
@@ -80,5 +84,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: COLORS.DARK.BG,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateTxt: {
+    fontSize: 32,
+    color: COLORS.DARK.MUTED_TEXT,
+    textAlign: 'center',
+    paddingBottom: 100,
   },
 });

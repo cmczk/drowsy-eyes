@@ -7,6 +7,7 @@ type DrowsyTextProps = TextProps & {
 
 export const DrowsyText: React.FC<DrowsyTextProps> = ({
   type = 'simple',
+  style,
   ...props
 }) => {
   return (
@@ -15,6 +16,7 @@ export const DrowsyText: React.FC<DrowsyTextProps> = ({
         styles.default,
         type === 'logo' && styles.logo,
         type === 'heading' && styles.heading,
+        style,
       ]}
       {...props}
     />
