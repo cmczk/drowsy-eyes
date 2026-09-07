@@ -8,7 +8,31 @@ import { Dream, DreamPreview } from '@/db/schema';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import Markdown from 'react-native-marked';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const markdownTheme = {
+  colors: {
+    text: COLORS.DARK.TEXT,
+    link: '#58A6FF',
+    code: '#161B22',
+    border: COLORS.DARK.MUTED,
+  },
+};
+
+const markdownStyles = StyleSheet.create({
+  text: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  li: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  paragraph: {
+    paddingVertical: 6,
+  },
+});
 
 export default function DreamScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -144,7 +168,16 @@ export default function DreamScreen() {
           </View>
         )}
 
-        <DrowsyText>{dream.text}</DrowsyText>
+        <Markdown
+          value={dream.text}
+          theme={markdownTheme}
+          styles={markdownStyles}
+          flatListProps={{
+            style: styles.markdown,
+            contentContainerStyle: styles.markdownContent,
+            showsVerticalScrollIndicator: false,
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -157,6 +190,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   textContainer: {
+    flex: 1,
     marginTop: 12,
   },
   btnContainer: {
@@ -175,5 +209,11 @@ const styles = StyleSheet.create({
   },
   tagPlate: {
     alignSelf: 'flex-start',
+  },
+  markdown: {
+    flex: 1,
+  },
+  markdownContent: {
+    paddingBottom: 20,
   },
 });
