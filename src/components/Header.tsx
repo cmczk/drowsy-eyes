@@ -64,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   const filterButtonRef = useRef<View>(null);
 
   const { width: windowWidth } = useWindowDimensions();
+  const hasSelectedFilters = selectedTagIds.length > 0;
 
   const openMenu = () => {
     moreButtonRef.current?.measureInWindow((x, y, width, height) => {
@@ -142,14 +143,29 @@ export const Header: React.FC<HeaderProps> = ({
               />
 
               {tags.length > 0 && (
-                <View ref={filterButtonRef} collapsable={false}>
+                <View
+                  ref={filterButtonRef}
+                  collapsable={false}
+                  style={styles.filterButtonContainer}
+                >
                   <DrowsyButton
                     type="icon"
                     icon="filter"
                     onPress={openFilter}
-                    accessibilityLabel="Фильтровать по тегам"
+                    accessibilityLabel={
+                      hasSelectedFilters
+                        ? `Фильтровать по тегам, выбрано: ${selectedTagIds.length}`
+                        : 'Фильтровать по тегам'
+                    }
                     accessibilityRole="button"
                   />
+
+                  {hasSelectedFilters && (
+                    <View
+                      pointerEvents="none"
+                      style={styles.filterIndicator}
+                    />
+                  )}
                 </View>
               )}
 
@@ -300,6 +316,20 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     flexDirection: 'row',
+  },
+  filterButtonContainer: {
+    position: 'relative',
+  },
+  filterIndicator: {
+    position: 'absolute',
+    top: 5,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: COLORS.DARK.BG,
+    backgroundColor: COLORS.DARK.SECONDARY,
   },
   overlay: {
     flex: 1,
