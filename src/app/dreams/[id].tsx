@@ -127,19 +127,23 @@ export default function DreamScreen() {
 
       <View style={styles.textContainer}>
         <DrowsyText type="heading">{dream.title}</DrowsyText>
-        <View style={styles.platesList}>
-          {dream.tags.map((tag) => {
-            return (
-              <TagPlate
-                key={tag.title}
-                style={styles.tagPlate}
-                type="readonly"
-                title={tag.title}
-                color={tag.color}
-              />
-            );
-          })}
-        </View>
+
+        {dream.tags.length > 0 && (
+          <View style={styles.platesList}>
+            {dream.tags.map((tag) => {
+              return (
+                <TagPlate
+                  key={tag.title}
+                  style={styles.tagPlate}
+                  type="readonly"
+                  title={tag.title}
+                  color={tag.color}
+                />
+              );
+            })}
+          </View>
+        )}
+
         <DrowsyText>{dream.text}</DrowsyText>
       </View>
     </SafeAreaView>

@@ -1,11 +1,14 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { TagColorSelector } from '@/components/TagColorSelector';
+import { TagDropdown } from '@/components/TagDropdown';
 import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { insertDream } from '@/db/dreams-repository';
+import { TagPreview } from '@/db/schema';
+import { getTags } from '@/db/tags-repository';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -33,15 +36,62 @@ export default function AddDreamScreen() {
     { id: number | null; title: string; color: string | null }[]
   >([]);
   const [tagForColoring, setTagForColoring] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<TagPreview[]>([]);
+  const [tagDropdownVisible, setTagDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTags() {
+      try {
+        const result = await getTags();
+
+        if (!cancelled) setAvailableTags(result);
+      } catch {}
+    }
+
+    void loadTags();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSelectAvailableTag = (tag: TagPreview) => {
+    setTagsForDream((currentTags) => {
+      const alreadyAdded = currentTags.some(
+        (currentTag) => currentTag.id === tag.id,
+      );
+
+      if (alreadyAdded) return currentTags;
+
+      return [
+        ...currentTags,
+        { id: tag.id, title: tag.title, color: tag.color },
+      ];
+    });
+
+    setNewTagTitle('');
+  };
 
   const handleAddTag = () => {
     const tagTitle = newTagTitle.trim();
     if (!tagTitle) return;
 
+    const normalizedTagTitle = tagTitle.toLocaleLowerCase('ru-RU');
+    const existingTag = availableTags.find(
+      (tag) => tag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+    );
+
+    if (existingTag) {
+      handleSelectAvailableTag(existingTag);
+      return;
+    }
+
     setTagsForDream((currentTags) => {
       const alreadyAdded = currentTags.some(
         (currentTag) =>
-          currentTag.title.toLowerCase() === tagTitle.toLowerCase(),
+          currentTag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
       );
 
       return alreadyAdded
@@ -59,6 +109,15 @@ export default function AddDreamScreen() {
   };
 
   const canSave = title.trim().length > 0;
+  const tagsAvailableForSelection = availableTags.filter(
+    (availableTag) =>
+      !tagsForDream.some((tag) => tag.id === availableTag.id),
+  );
+
+  const openTagDropdown = () => {
+    setTagForColoring(null);
+    setTagDropdownVisible(true);
+  };
 
   const handleSave = async () => {
     try {
@@ -106,7 +165,10 @@ export default function AddDreamScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        onTouchStart={() => setTagForColoring(null)}
+        onTouchStart={() => {
+          setTagForColoring(null);
+          setTagDropdownVisible(false);
+        }}
       >
         <DrowsyTextInput
           type="oneline"
@@ -118,17 +180,34 @@ export default function AddDreamScreen() {
           maxLength={100}
         />
 
-        <DrowsyTextInput
-          type="oneline"
-          value={newTagTitle}
-          onChangeText={setNewTagTitle}
-          onSubmitEditing={handleAddTag}
-          submitBehavior="submit"
-          returnKeyType="done"
-          placeholder="Теги"
-          placeholderTextColor={COLORS.DARK.MUTED}
-          maxLength={100}
-        />
+        <View
+          style={[
+            styles.tagInputWrapper,
+            tagDropdownVisible && styles.activeTagInputWrapper,
+          ]}
+          onTouchStart={(event) => event.stopPropagation()}
+        >
+          <DrowsyTextInput
+            type="oneline"
+            value={newTagTitle}
+            onChangeText={setNewTagTitle}
+            onFocus={openTagDropdown}
+            onPressIn={openTagDropdown}
+            onSubmitEditing={handleAddTag}
+            submitBehavior="submit"
+            returnKeyType="done"
+            placeholder="Теги"
+            placeholderTextColor={COLORS.DARK.MUTED}
+            maxLength={100}
+          />
+
+          {tagDropdownVisible && (
+            <TagDropdown
+              tags={tagsAvailableForSelection}
+              onTagPress={handleSelectAvailableTag}
+            />
+          )}
+        </View>
 
         {tagsForDream.length > 0 && (
           <View style={styles.tagList}>
@@ -215,6 +294,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  tagInputWrapper: {
+    position: 'relative',
+  },
+  activeTagInputWrapper: {
+    zIndex: 30,
   },
   tagWrapper: {
     position: 'relative',

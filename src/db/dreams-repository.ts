@@ -100,12 +100,21 @@ export async function insertDream(data: NewDream): Promise<Dream> {
       throw new Error('Dream was not inserted.');
     }
 
-    // В будущем сюда попадут теги, выбранные из выпадающего списка.
-    const existingTagIds = inputTags
-      .map((tag) => tag.id)
-      .filter((id): id is number => id !== null);
+    const existingTagsToUpsert = inputTags.flatMap((tag) =>
+      tag.id === null
+        ? []
+        : [
+            {
+              id: tag.id,
+              title: tag.title.trim(),
+              color: tag.color,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+    );
 
-    const tagsToUpsert = inputTags
+    const newTagsToUpsert = inputTags
       .filter((tag) => tag.id === null)
       .map((tag) => ({
         title: tag.title.trim(),
@@ -114,16 +123,35 @@ export async function insertDream(data: NewDream): Promise<Dream> {
         updatedAt: now,
       }));
 
-    if (tagsToUpsert.some((tag) => !tag.title)) {
+    if (
+      existingTagsToUpsert.some((tag) => !tag.title) ||
+      newTagsToUpsert.some((tag) => !tag.title)
+    ) {
       throw new Error('Tag title cannot be empty.');
     }
 
+    if (existingTagsToUpsert.length > 0) {
+      tx.insert(tags)
+        .values(existingTagsToUpsert)
+        .onConflictDoUpdate({
+          target: tags.id,
+          set: {
+            color: sql.raw(`excluded.${tags.color.name}`),
+            updatedAt: now,
+          },
+          setWhere: sql`${sql.identifier(tags.color.name)} is not excluded.${sql.identifier(
+            tags.color.name,
+          )}`,
+        })
+        .run();
+    }
+
     const upsertedTagIds =
-      tagsToUpsert.length === 0
+      newTagsToUpsert.length === 0
         ? []
         : tx
             .insert(tags)
-            .values(tagsToUpsert)
+            .values(newTagsToUpsert)
             .onConflictDoUpdate({
               target: tags.title,
               set: {
@@ -135,7 +163,12 @@ export async function insertDream(data: NewDream): Promise<Dream> {
             .all()
             .map((tag) => tag.id);
 
-    const tagIds = [...new Set([...existingTagIds, ...upsertedTagIds])];
+    const tagIds = [
+      ...new Set([
+        ...existingTagsToUpsert.map((tag) => tag.id),
+        ...upsertedTagIds,
+      ]),
+    ];
 
     if (tagIds.length > 0) {
       tx.insert(dreamTags)
@@ -217,6 +250,9 @@ export async function updateDream({
             color: sql.raw(`excluded.${tags.color.name}`),
             updatedAt: now,
           },
+          setWhere: sql`${sql.identifier(tags.color.name)} is not excluded.${sql.identifier(
+            tags.color.name,
+          )}`,
         })
         .run();
     }

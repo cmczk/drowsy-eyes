@@ -3,10 +3,12 @@ import { DrowsyLoading } from '@/components/DrowsyLoading';
 import { DrowsyText } from '@/components/DrowsyText';
 import { DrowsyTextInput } from '@/components/DrowsyTextInput';
 import { TagColorSelector } from '@/components/TagColorSelector';
+import { TagDropdown } from '@/components/TagDropdown';
 import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { getDreamById, updateDream } from '@/db/dreams-repository';
-import { Dream, DreamPreview } from '@/db/schema';
+import { Dream, DreamPreview, TagPreview } from '@/db/schema';
+import { getTags } from '@/db/tags-repository';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -32,6 +34,8 @@ export default function EditDreamScreen() {
     { id: number | null; title: string; color: string | null }[]
   >([]);
   const [tagForColoring, setTagForColoring] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<TagPreview[]>([]);
+  const [tagDropdownVisible, setTagDropdownVisible] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -69,16 +73,24 @@ export default function EditDreamScreen() {
       }
 
       try {
-        const result = await getDreamById(dreamId);
+        const [dreamResult, tagsResult] = await Promise.all([
+          getDreamById(dreamId),
+          getTags(),
+        ]);
 
         if (!cancelled) {
-          setDream(result);
+          setDream(dreamResult);
+          setAvailableTags(tagsResult);
 
-          if (result) {
-            setTitle(result.title);
-            setText(result.text);
+          if (dreamResult) {
+            setTitle(dreamResult.title);
+            setText(dreamResult.text);
             setTagsForDream(
-              result.tags.map(({ id, title, color }) => ({ id, title, color })),
+              dreamResult.tags.map(({ id, title, color }) => ({
+                id,
+                title,
+                color,
+              })),
             );
           }
         }
@@ -118,14 +130,41 @@ export default function EditDreamScreen() {
     );
   }
 
+  const handleSelectAvailableTag = (tag: TagPreview) => {
+    setTagsForDream((currentTags) => {
+      const alreadyAdded = currentTags.some(
+        (currentTag) => currentTag.id === tag.id,
+      );
+
+      if (alreadyAdded) return currentTags;
+
+      return [
+        ...currentTags,
+        { id: tag.id, title: tag.title, color: tag.color },
+      ];
+    });
+
+    setNewTagTitle('');
+  };
+
   const handleAddTag = () => {
     const tagTitle = newTagTitle.trim();
     if (!tagTitle) return;
 
+    const normalizedTagTitle = tagTitle.toLocaleLowerCase('ru-RU');
+    const existingTag = availableTags.find(
+      (tag) => tag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+    );
+
+    if (existingTag) {
+      handleSelectAvailableTag(existingTag);
+      return;
+    }
+
     setTagsForDream((currentTags) => {
       const alreadyAdded = currentTags.some(
         (currentTag) =>
-          currentTag.title.toLowerCase() === tagTitle.toLowerCase(),
+          currentTag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
       );
 
       return alreadyAdded
@@ -140,6 +179,16 @@ export default function EditDreamScreen() {
     setTagsForDream((currentTags) =>
       currentTags.filter((tag) => tag.title !== tagToRemove),
     );
+  };
+
+  const tagsAvailableForSelection = availableTags.filter(
+    (availableTag) =>
+      !tagsForDream.some((tag) => tag.id === availableTag.id),
+  );
+
+  const openTagDropdown = () => {
+    setTagForColoring(null);
+    setTagDropdownVisible(true);
   };
 
   const handleEdit = async () => {
@@ -192,7 +241,10 @@ export default function EditDreamScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        onTouchStart={() => setTagForColoring(null)}
+        onTouchStart={() => {
+          setTagForColoring(null);
+          setTagDropdownVisible(false);
+        }}
       >
         <DrowsyTextInput
           type="oneline"
@@ -203,17 +255,34 @@ export default function EditDreamScreen() {
           maxLength={100}
         />
 
-        <DrowsyTextInput
-          type="oneline"
-          value={newTagTitle}
-          onChangeText={setNewTagTitle}
-          onSubmitEditing={handleAddTag}
-          submitBehavior="submit"
-          returnKeyType="done"
-          placeholder="Теги"
-          placeholderTextColor={COLORS.DARK.MUTED}
-          maxLength={100}
-        />
+        <View
+          style={[
+            styles.tagInputWrapper,
+            tagDropdownVisible && styles.activeTagInputWrapper,
+          ]}
+          onTouchStart={(event) => event.stopPropagation()}
+        >
+          <DrowsyTextInput
+            type="oneline"
+            value={newTagTitle}
+            onChangeText={setNewTagTitle}
+            onFocus={openTagDropdown}
+            onPressIn={openTagDropdown}
+            onSubmitEditing={handleAddTag}
+            submitBehavior="submit"
+            returnKeyType="done"
+            placeholder="Теги"
+            placeholderTextColor={COLORS.DARK.MUTED}
+            maxLength={100}
+          />
+
+          {tagDropdownVisible && (
+            <TagDropdown
+              tags={tagsAvailableForSelection}
+              onTagPress={handleSelectAvailableTag}
+            />
+          )}
+        </View>
 
         {tagsForDream.length > 0 && (
           <View style={styles.tagList}>
@@ -302,6 +371,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  tagInputWrapper: {
+    position: 'relative',
+  },
+  activeTagInputWrapper: {
+    zIndex: 30,
   },
   tagWrapper: {
     position: 'relative',

@@ -25,7 +25,7 @@ export const DreamCard: React.FC<DreamCardProps> = ({
   return (
     <TouchableOpacity style={styles.dreamCard} {...props}>
       <DrowsyText type="title">{title}</DrowsyText>
-      <DrowsyText>{shortText}</DrowsyText>
+      {shortText && <DrowsyText>{shortText}</DrowsyText>}
       {tags.length > 0 && (
         <View style={styles.platesList}>
           {tags.map((tag) => {
