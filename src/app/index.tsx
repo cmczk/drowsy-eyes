@@ -61,13 +61,19 @@ export default function Index() {
     );
   }
 
-  const filteredDreams = dreams.filter(
-    (dream) =>
-      dream.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      selectedTagIds.every((selectedTagId) =>
-        dream.tags.some((tag) => tag.id === selectedTagId),
-      ),
-  );
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredDreams = dreams.filter((dream) => {
+    const matchesSearch =
+      normalizedSearchQuery.length === 0 ||
+      dream.title.toLowerCase().includes(normalizedSearchQuery) ||
+      dream.text.toLowerCase().includes(normalizedSearchQuery);
+
+    const matchesTags = selectedTagIds.every((selectedTagId) =>
+      dream.tags.some((tag) => tag.id === selectedTagId),
+    );
+
+    return matchesSearch && matchesTags;
+  });
 
   const handleTagToggle = (tagId: number) => {
     setSelectedTagIds((currentTagIds) =>

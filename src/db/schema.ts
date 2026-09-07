@@ -57,6 +57,9 @@ export type NewDream = Pick<typeof dreams.$inferInsert, 'title' | 'text'> & {
   }[];
 };
 export type UpdateDream = NewDream & Pick<Dream, 'id'>;
-export type DreamPreview = Pick<Dream, 'id' | 'title' | 'createdAt'> & {
+export type DreamPreview = Pick<
+  Dream,
+  'id' | 'title' | 'text' | 'createdAt'
+> & {
   tags: TagPreview[];
 };

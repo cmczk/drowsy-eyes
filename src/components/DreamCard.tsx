@@ -12,17 +12,20 @@ import { TagPlate } from './TagPlate';
 
 type DreamCardProps = TouchableOpacityProps & {
   title: string;
+  shortText: string;
   tags: TagPreview[];
 };
 
 export const DreamCard: React.FC<DreamCardProps> = ({
   title,
+  shortText,
   tags,
   ...props
 }) => {
   return (
     <TouchableOpacity style={styles.dreamCard} {...props}>
       <DrowsyText type="title">{title}</DrowsyText>
+      <DrowsyText>{shortText}</DrowsyText>
       {tags.length > 0 && (
         <View style={styles.platesList}>
           {tags.map((tag) => {

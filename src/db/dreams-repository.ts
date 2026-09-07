@@ -16,6 +16,7 @@ export async function getDreams(): Promise<DreamPreview[]> {
       dream: {
         id: dreams.id,
         title: dreams.title,
+        text: dreams.text,
         createdAt: dreams.createdAt,
       },
       tag: {

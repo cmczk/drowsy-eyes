@@ -17,6 +17,11 @@ export const DreamList: React.FC<DreamListProps> = ({ dreams }) => {
         renderItem={({ item }) => (
           <DreamCard
             title={item.title}
+            shortText={
+              item.text.length > 100
+                ? `${item.text.slice(0, 100).trimEnd()}…`
+                : item.text
+            }
             tags={item.tags}
             onPress={() =>
               router.push({
