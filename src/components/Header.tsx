@@ -33,6 +33,8 @@ type HeaderProps = {
   selectedTagIds: number[];
   onTagToggle: (tagId: number) => void;
   onResetFilter: () => void;
+  onExportMarkdown: () => void;
+  isExporting: boolean;
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   selectedTagIds,
   onTagToggle,
   onResetFilter,
+  onExportMarkdown,
+  isExporting,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({
@@ -94,6 +98,11 @@ export const Header: React.FC<HeaderProps> = ({
   const handleAboutPress = () => {
     closeMenu();
     router.push('/about');
+  };
+
+  const handleExportMarkdownPress = () => {
+    closeMenu();
+    onExportMarkdown();
   };
 
   return (
@@ -190,13 +199,18 @@ export const Header: React.FC<HeaderProps> = ({
             </Pressable>
             <Pressable
               accessibilityRole="menuitem"
-              onPress={() => {}}
+              accessibilityState={{ disabled: isExporting }}
+              disabled={isExporting}
+              onPress={handleExportMarkdownPress}
               style={({ pressed }) => [
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
+                isExporting && styles.menuItemDisabled,
               ]}
             >
-              <DrowsyText>Экспорт в Markdown</DrowsyText>
+              <DrowsyText>
+                {isExporting ? 'Создание архива…' : 'Экспорт в Markdown'}
+              </DrowsyText>
             </Pressable>
             <Pressable
               accessibilityRole="menuitem"
@@ -318,6 +332,9 @@ const styles = StyleSheet.create({
   },
   menuItemPressed: {
     backgroundColor: '#202020',
+  },
+  menuItemDisabled: {
+    opacity: 0.5,
   },
   filterMenu: {
     padding: 12,

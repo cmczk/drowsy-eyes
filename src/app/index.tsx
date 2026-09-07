@@ -7,9 +7,10 @@ import { COLORS } from '@/constants/theme';
 import { getDreams } from '@/db/dreams-repository';
 import { DreamPreview, TagPreview } from '@/db/schema';
 import { getTags } from '@/db/tags-repository';
+import { exportDreamsToMarkdown } from '@/services/dreams-export';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
@@ -20,6 +21,7 @@ export default function Index() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +85,31 @@ export default function Index() {
     );
   };
 
+  const handleExportMarkdown = async () => {
+    if (isExporting) return;
+
+    setIsExporting(true);
+
+    try {
+      const result = await exportDreamsToMarkdown();
+
+      if (result.status === 'empty') {
+        Alert.alert('Нет записей для экспорта');
+      }
+
+      if (result.status === 'exported') {
+        Alert.alert(
+          'Архив сохранён',
+          `${result.fileName} сохранён в выбранную папку.`,
+        );
+      }
+    } catch {
+      Alert.alert('Не удалось сохранить архив');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const hasDreams = dreams.length > 0;
   const hasFilteredDreams = hasDreams && filteredDreams.length > 0;
 
@@ -96,6 +123,8 @@ export default function Index() {
         selectedTagIds={selectedTagIds}
         onTagToggle={handleTagToggle}
         onResetFilter={() => setSelectedTagIds([])}
+        onExportMarkdown={() => void handleExportMarkdown()}
+        isExporting={isExporting}
       />
       {hasFilteredDreams ? (
         <DreamList dreams={filteredDreams} />
