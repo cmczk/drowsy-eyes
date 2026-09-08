@@ -7,6 +7,7 @@ import { COLORS } from '@/constants/theme';
 import { insertDream } from '@/db/dreams-repository';
 import { TagPreview } from '@/db/schema';
 import { getTags } from '@/db/tags-repository';
+import { useLocalization } from '@/localization';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -29,6 +30,7 @@ function defaultTitle() {
 }
 
 export default function AddDreamScreen() {
+  const { locale, t } = useLocalization();
   const [title, setTitle] = useState(defaultTitle);
   const [text, setText] = useState('');
   const [newTagTitle, setNewTagTitle] = useState('');
@@ -78,9 +80,9 @@ export default function AddDreamScreen() {
     const tagTitle = newTagTitle.trim();
     if (!tagTitle) return;
 
-    const normalizedTagTitle = tagTitle.toLocaleLowerCase('ru-RU');
+    const normalizedTagTitle = tagTitle.toLocaleLowerCase(locale);
     const existingTag = availableTags.find(
-      (tag) => tag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+      (tag) => tag.title.toLocaleLowerCase(locale) === normalizedTagTitle,
     );
 
     if (existingTag) {
@@ -91,7 +93,7 @@ export default function AddDreamScreen() {
     setTagsForDream((currentTags) => {
       const alreadyAdded = currentTags.some(
         (currentTag) =>
-          currentTag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+          currentTag.title.toLocaleLowerCase(locale) === normalizedTagTitle,
       );
 
       return alreadyAdded
@@ -129,7 +131,7 @@ export default function AddDreamScreen() {
 
       router.back();
     } catch {
-      Alert.alert('Ошибка', 'Не удалось сохранить сновидение.');
+      Alert.alert(t('common.error'), t('dream.create.saveError'));
     }
   };
 
@@ -140,20 +142,20 @@ export default function AddDreamScreen() {
     }
 
     Alert.alert(
-      'Сохранить сновидение?',
-      'Если выйти без сохранения, введённый текст будет потерян.',
+      t('dream.create.confirmTitle'),
+      t('dream.create.confirmMessage'),
       [
         {
-          text: 'Продолжить',
+          text: t('common.actions.continue'),
           style: 'cancel',
         },
         {
-          text: 'Не сохранять',
+          text: t('dream.create.discard'),
           style: 'destructive',
           onPress: () => router.back(),
         },
         {
-          text: 'Сохранить',
+          text: t('common.actions.save'),
           onPress: handleSave,
         },
       ],
@@ -174,7 +176,7 @@ export default function AddDreamScreen() {
           type="oneline"
           value={title}
           onChangeText={setTitle}
-          placeholder="Название"
+          placeholder={t('dream.form.titlePlaceholder')}
           placeholderTextColor={COLORS.DARK.MUTED}
           autoFocus
           maxLength={100}
@@ -196,7 +198,7 @@ export default function AddDreamScreen() {
             onSubmitEditing={handleAddTag}
             submitBehavior="submit"
             returnKeyType="done"
-            placeholder="Теги"
+            placeholder={t('dream.form.tagsPlaceholder')}
             placeholderTextColor={COLORS.DARK.MUTED}
             maxLength={100}
           />
@@ -254,17 +256,21 @@ export default function AddDreamScreen() {
           type="multiline"
           value={text}
           onChangeText={setText}
-          placeholder="Что тебе снилось?"
+          placeholder={t('dream.form.textPlaceholder')}
           placeholderTextColor={COLORS.DARK.MUTED}
           textAlignVertical="top"
         />
 
         <View style={styles.footer}>
-          <DrowsyButton type="cancel" label="Отмена" onPress={handleCancel} />
+          <DrowsyButton
+            type="cancel"
+            label={t('common.actions.cancel')}
+            onPress={handleCancel}
+          />
 
           <DrowsyButton
             type="default"
-            label="Сохранить"
+            label={t('common.actions.save')}
             disabled={!canSave}
             onPress={handleSave}
           />

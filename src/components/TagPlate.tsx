@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { BORDER_RADIUS } from '@/constants/ui';
+import { useLocalization } from '@/localization';
 import { SymbolView } from 'expo-symbols';
 import {
   StyleSheet,
@@ -23,6 +24,8 @@ export const TagPlate: React.FC<TagPlateProps> = ({
   style,
   ...props
 }) => {
+  const { t } = useLocalization();
+
   return (
     <TouchableOpacity
       style={[
@@ -42,7 +45,11 @@ export const TagPlate: React.FC<TagPlateProps> = ({
         {title}
       </DrowsyText>
       {type === 'editable' && (
-        <TouchableOpacity onPress={onCrossPress}>
+        <TouchableOpacity
+          onPress={onCrossPress}
+          accessibilityLabel={t('accessibility.removeTag', { title })}
+          accessibilityRole="button"
+        >
           <SymbolView
             name={{
               ios: 'xmark',

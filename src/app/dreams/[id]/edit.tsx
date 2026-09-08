@@ -9,6 +9,7 @@ import { COLORS } from '@/constants/theme';
 import { getDreamById, updateDream } from '@/db/dreams-repository';
 import { Dream, DreamPreview, TagPreview } from '@/db/schema';
 import { getTags } from '@/db/tags-repository';
+import { useLocalization } from '@/localization';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -21,6 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EditDreamScreen() {
+  const { locale, t } = useLocalization();
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
 
@@ -117,7 +119,7 @@ export default function EditDreamScreen() {
   if (loadError) {
     return (
       <SafeAreaView style={styles.container}>
-        <DrowsyText>Не удалось загрузить сновидение.</DrowsyText>
+        <DrowsyText>{t('dream.loadError')}</DrowsyText>
       </SafeAreaView>
     );
   }
@@ -125,7 +127,7 @@ export default function EditDreamScreen() {
   if (!dream) {
     return (
       <SafeAreaView style={styles.container}>
-        <DrowsyText>Сновидение не найдено</DrowsyText>
+        <DrowsyText>{t('dream.notFound')}</DrowsyText>
       </SafeAreaView>
     );
   }
@@ -151,9 +153,9 @@ export default function EditDreamScreen() {
     const tagTitle = newTagTitle.trim();
     if (!tagTitle) return;
 
-    const normalizedTagTitle = tagTitle.toLocaleLowerCase('ru-RU');
+    const normalizedTagTitle = tagTitle.toLocaleLowerCase(locale);
     const existingTag = availableTags.find(
-      (tag) => tag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+      (tag) => tag.title.toLocaleLowerCase(locale) === normalizedTagTitle,
     );
 
     if (existingTag) {
@@ -164,7 +166,7 @@ export default function EditDreamScreen() {
     setTagsForDream((currentTags) => {
       const alreadyAdded = currentTags.some(
         (currentTag) =>
-          currentTag.title.toLocaleLowerCase('ru-RU') === normalizedTagTitle,
+          currentTag.title.toLocaleLowerCase(locale) === normalizedTagTitle,
       );
 
       return alreadyAdded
@@ -204,7 +206,7 @@ export default function EditDreamScreen() {
 
       router.back();
     } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось обновить сновидение.');
+      Alert.alert(t('common.error'), t('dream.edit.updateError'));
       console.log(error);
     }
   };
@@ -216,20 +218,20 @@ export default function EditDreamScreen() {
     }
 
     Alert.alert(
-      'Сохранить изменения?',
-      'Если выйти без сохранения, отредактированный текст будет потерян.',
+      t('dream.edit.confirmTitle'),
+      t('dream.edit.confirmMessage'),
       [
         {
-          text: 'Продолжить',
+          text: t('common.actions.continue'),
           style: 'cancel',
         },
         {
-          text: 'Не обновлять',
+          text: t('dream.edit.discard'),
           style: 'destructive',
           onPress: () => router.back(),
         },
         {
-          text: 'Обновить',
+          text: t('common.actions.update'),
           onPress: handleEdit,
         },
       ],
@@ -250,7 +252,7 @@ export default function EditDreamScreen() {
           type="oneline"
           value={title}
           onChangeText={setTitle}
-          placeholder="Название"
+          placeholder={t('dream.form.titlePlaceholder')}
           placeholderTextColor={COLORS.DARK.MUTED}
           maxLength={100}
         />
@@ -271,7 +273,7 @@ export default function EditDreamScreen() {
             onSubmitEditing={handleAddTag}
             submitBehavior="submit"
             returnKeyType="done"
-            placeholder="Теги"
+            placeholder={t('dream.form.tagsPlaceholder')}
             placeholderTextColor={COLORS.DARK.MUTED}
             maxLength={100}
           />
@@ -329,18 +331,22 @@ export default function EditDreamScreen() {
           type="multiline"
           value={text}
           onChangeText={setText}
-          placeholder="Что тебе снилось?"
+          placeholder={t('dream.form.textPlaceholder')}
           placeholderTextColor={COLORS.DARK.MUTED}
           autoFocus
           textAlignVertical="top"
         />
 
         <View style={styles.footer}>
-          <DrowsyButton type="cancel" label="Отмена" onPress={handleCancel} />
+          <DrowsyButton
+            type="cancel"
+            label={t('common.actions.cancel')}
+            onPress={handleCancel}
+          />
 
           <DrowsyButton
             type="default"
-            label="Обновить"
+            label={t('common.actions.update')}
             disabled={!canSave || !hasChanges}
             onPress={handleEdit}
           />

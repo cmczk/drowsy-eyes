@@ -6,6 +6,7 @@ import {
   MENU,
 } from '@/constants/ui';
 import { TagPreview } from '@/db/schema';
+import { useLocalization } from '@/localization';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -47,6 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExportMarkdown,
   isExporting,
 }) => {
+  const { t } = useLocalization();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition>({
     top: 0,
@@ -101,6 +103,11 @@ export const Header: React.FC<HeaderProps> = ({
     router.push('/about');
   };
 
+  const handleSettingsPress = () => {
+    closeMenu();
+    router.push('/settings');
+  };
+
   const handleExportMarkdownPress = () => {
     closeMenu();
     onExportMarkdown();
@@ -116,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Искать"
+              placeholder={t('header.searchPlaceholder')}
               placeholderTextColor={COLORS.DARK.MUTED}
               maxLength={100}
             />
@@ -124,6 +131,8 @@ export const Header: React.FC<HeaderProps> = ({
               style={styles.closeBtn}
               type="icon"
               icon="close"
+              accessibilityLabel={t('accessibility.closeSearch')}
+              accessibilityRole="button"
               onPress={() => {
                 setSearchBarOpened(false);
                 setSearchQuery('');
@@ -137,6 +146,8 @@ export const Header: React.FC<HeaderProps> = ({
               <DrowsyButton
                 type="icon"
                 icon="search"
+                accessibilityLabel={t('accessibility.search')}
+                accessibilityRole="button"
                 onPress={() => {
                   setSearchBarOpened(true);
                 }}
@@ -154,8 +165,10 @@ export const Header: React.FC<HeaderProps> = ({
                     onPress={openFilter}
                     accessibilityLabel={
                       hasSelectedFilters
-                        ? `Фильтровать по тегам, выбрано: ${selectedTagIds.length}`
-                        : 'Фильтровать по тегам'
+                        ? t('accessibility.filterTagsSelected', {
+                            count: selectedTagIds.length,
+                          })
+                        : t('accessibility.filterTags')
                     }
                     accessibilityRole="button"
                   />
@@ -174,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
                   type="icon"
                   icon="more"
                   onPress={openMenu}
-                  accessibilityLabel="Открыть меню"
+                  accessibilityLabel={t('accessibility.openMenu')}
                   accessibilityRole="button"
                 />
               </View>
@@ -193,7 +206,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Pressable
             style={StyleSheet.absoluteFill}
             onPress={closeMenu}
-            accessibilityLabel="Закрыть меню"
+            accessibilityLabel={t('accessibility.closeMenu')}
           />
 
           <View
@@ -205,13 +218,13 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Pressable
               accessibilityRole="menuitem"
-              onPress={() => {}}
+              onPress={handleSettingsPress}
               style={({ pressed }) => [
                 styles.menuItem,
                 pressed && styles.menuItemPressed,
               ]}
             >
-              <DrowsyText>Настройки</DrowsyText>
+              <DrowsyText>{t('header.settings')}</DrowsyText>
             </Pressable>
             <Pressable
               accessibilityRole="menuitem"
@@ -225,7 +238,9 @@ export const Header: React.FC<HeaderProps> = ({
               ]}
             >
               <DrowsyText>
-                {isExporting ? 'Создание архива…' : 'Экспорт в Markdown'}
+                {isExporting
+                  ? t('header.creatingArchive')
+                  : t('header.exportMarkdown')}
               </DrowsyText>
             </Pressable>
             <Pressable
@@ -236,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({
                 pressed && styles.menuItemPressed,
               ]}
             >
-              <DrowsyText>О проекте</DrowsyText>
+              <DrowsyText>{t('header.about')}</DrowsyText>
             </Pressable>
           </View>
         </View>
@@ -252,7 +267,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Pressable
             style={StyleSheet.absoluteFill}
             onPress={closeFilter}
-            accessibilityLabel="Закрыть фильтр"
+            accessibilityLabel={t('accessibility.closeFilter')}
           />
 
           <View
@@ -295,7 +310,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <DrowsyButton
               type="cancel"
-              label="Сбросить фильтры"
+              label={t('header.resetFilters')}
               onPress={onResetFilter}
               style={styles.resetFilterButton}
             />

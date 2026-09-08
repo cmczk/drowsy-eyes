@@ -1,6 +1,7 @@
 import { COLORS } from '@/constants/theme';
 import { BORDER_RADIUS, BORDER_WIDTH, MENU } from '@/constants/ui';
 import { TagPreview } from '@/db/schema';
+import { useLocalization } from '@/localization';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { TagPlate } from './TagPlate';
 
@@ -13,6 +14,8 @@ export const TagDropdown: React.FC<TagDropdownProps> = ({
   tags,
   onTagPress,
 }) => {
+  const { t } = useLocalization();
+
   if (tags.length === 0) return null;
 
   return (
@@ -32,7 +35,9 @@ export const TagDropdown: React.FC<TagDropdownProps> = ({
             onPress={() => onTagPress(tag)}
             style={styles.tag}
             accessibilityRole="button"
-            accessibilityLabel={`Добавить тег ${tag.title}`}
+            accessibilityLabel={t('accessibility.addTag', {
+              title: tag.title,
+            })}
           />
         ))}
       </ScrollView>

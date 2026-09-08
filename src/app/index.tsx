@@ -8,12 +8,14 @@ import { getDreams } from '@/db/dreams-repository';
 import { DreamPreview, TagPreview } from '@/db/schema';
 import { getTags } from '@/db/tags-repository';
 import { exportDreamsToMarkdown } from '@/services/dreams-export';
+import { useLocalization } from '@/localization';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
+  const { t } = useLocalization();
   const [dreams, setDreams] = useState<DreamPreview[]>([]);
   const [tags, setTags] = useState<TagPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function Index() {
   if (loadError) {
     return (
       <SafeAreaView style={styles.container}>
-        <DrowsyText>Не удалось загрузить сновидения.</DrowsyText>
+        <DrowsyText>{t('home.loadError')}</DrowsyText>
       </SafeAreaView>
     );
   }
@@ -94,17 +96,17 @@ export default function Index() {
       const result = await exportDreamsToMarkdown();
 
       if (result.status === 'empty') {
-        Alert.alert('Нет записей для экспорта');
+        Alert.alert(t('home.export.empty'));
       }
 
       if (result.status === 'exported') {
         Alert.alert(
-          'Архив сохранён',
-          `${result.fileName} сохранён в выбранную папку.`,
+          t('home.export.successTitle'),
+          t('home.export.successMessage', { fileName: result.fileName }),
         );
       }
     } catch {
-      Alert.alert('Не удалось сохранить архив');
+      Alert.alert(t('home.export.error'));
     } finally {
       setIsExporting(false);
     }
@@ -129,11 +131,11 @@ export default function Index() {
       {hasFilteredDreams ? (
         <DreamList dreams={filteredDreams} />
       ) : hasDreams ? (
-        <DrowsyText>Ничего не нашлось.</DrowsyText>
+        <DrowsyText>{t('home.noResults')}</DrowsyText>
       ) : (
         <View style={styles.emptyState}>
           <DrowsyText style={styles.emptyStateTxt}>
-            Добавь первое сновидение
+            {t('home.empty')}
           </DrowsyText>
         </View>
       )}

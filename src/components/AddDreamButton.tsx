@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useLocalization } from '@/localization';
 import { SymbolView } from 'expo-symbols';
 import light from 'expo-symbols/androidWeights/light';
 import {
@@ -14,6 +15,7 @@ type AddDreamButtonProps = TouchableOpacityProps & {
 
 export const AddDreamButton: React.FC<AddDreamButtonProps> = ({ onPress }) => {
   const insets = useSafeAreaInsets();
+  const { t } = useLocalization();
 
   return (
     <TouchableOpacity
@@ -25,6 +27,8 @@ export const AddDreamButton: React.FC<AddDreamButtonProps> = ({ onPress }) => {
         },
       ]}
       onPress={onPress}
+      accessibilityLabel={t('accessibility.addDream')}
+      accessibilityRole="button"
     >
       <SymbolView
         name={{

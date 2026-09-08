@@ -1,11 +1,14 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyText } from '@/components/DrowsyText';
 import { COLORS } from '@/constants/theme';
+import { useLocalization } from '@/localization';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AboutScreen() {
+  const { t } = useLocalization();
+
   return (
     <SafeAreaView style={styles.container}>
       <DrowsyButton
@@ -13,9 +16,11 @@ export default function AboutScreen() {
         type="icon"
         icon="back"
         onPress={() => router.back()}
+        accessibilityLabel={t('accessibility.back')}
+        accessibilityRole="button"
       />
-      <DrowsyText type="heading">О проекте</DrowsyText>
-      <DrowsyText>Drowsy Eyes – ...</DrowsyText>
+      <DrowsyText type="heading">{t('about.title')}</DrowsyText>
+      <DrowsyText>{t('about.description')}</DrowsyText>
     </SafeAreaView>
   );
 }

@@ -5,6 +5,7 @@ import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
 import { deleteDream, getDreamById } from '@/db/dreams-repository';
 import { Dream, DreamPreview } from '@/db/schema';
+import { useLocalization } from '@/localization';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -35,6 +36,7 @@ const markdownStyles = StyleSheet.create({
 });
 
 export default function DreamScreen() {
+  const { t } = useLocalization();
   const { id } = useLocalSearchParams<{ id: string }>();
   const dreamId = Number(id);
 
@@ -90,7 +92,7 @@ export default function DreamScreen() {
   if (loadError) {
     return (
       <SafeAreaView style={styles.container}>
-        <DrowsyText>Не удалось загрузить сновидение.</DrowsyText>
+        <DrowsyText>{t('dream.loadError')}</DrowsyText>
       </SafeAreaView>
     );
   }
@@ -98,30 +100,30 @@ export default function DreamScreen() {
   if (!dream) {
     return (
       <SafeAreaView style={styles.container}>
-        <DrowsyText>Сновидение не найдено</DrowsyText>
+        <DrowsyText>{t('dream.notFound')}</DrowsyText>
       </SafeAreaView>
     );
   }
 
   const handleDelete = () => {
     Alert.alert(
-      'Удалить сновидение?',
-      'Ваше сновидение будет удалено навсегда.',
+      t('dream.delete.confirmTitle'),
+      t('dream.delete.confirmMessage'),
       [
         {
-          text: 'Удалить',
+          text: t('dream.delete.action'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteDream(dreamId);
               router.dismissTo('/');
             } catch {
-              Alert.alert('Ошибка', 'Не удалось удалить сновидение.');
+              Alert.alert(t('common.error'), t('dream.delete.error'));
             }
           },
         },
         {
-          text: 'Отмена',
+          text: t('common.actions.cancel'),
           style: 'cancel',
         },
       ],
@@ -131,11 +133,19 @@ export default function DreamScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.btnContainer}>
-        <DrowsyButton type="icon" icon="back" onPress={() => router.back()} />
+        <DrowsyButton
+          type="icon"
+          icon="back"
+          onPress={() => router.back()}
+          accessibilityLabel={t('accessibility.back')}
+          accessibilityRole="button"
+        />
         <View style={styles.editDeleteContainer}>
           <DrowsyButton
             type="icon"
             icon="edit"
+            accessibilityLabel={t('accessibility.editDream')}
+            accessibilityRole="button"
             onPress={() =>
               router.push({
                 pathname: '/dreams/[id]/edit',
@@ -145,7 +155,13 @@ export default function DreamScreen() {
               })
             }
           />
-          <DrowsyButton type="icon" icon="delete" onPress={handleDelete} />
+          <DrowsyButton
+            type="icon"
+            icon="delete"
+            onPress={handleDelete}
+            accessibilityLabel={t('accessibility.deleteDream')}
+            accessibilityRole="button"
+          />
         </View>
       </View>
 

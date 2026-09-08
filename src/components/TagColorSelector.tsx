@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useLocalization } from '@/localization';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const COLOR_SIZE = 32;
@@ -12,16 +13,22 @@ type TagColorSelectorProps = {
 export const TagColorSelector: React.FC<TagColorSelectorProps> = ({
   onColorSelect,
 }) => {
+  const { t } = useLocalization();
+
   return (
     <View
       style={styles.palette}
       onTouchStart={(event) => event.stopPropagation()}
     >
-      {COLORS.TAGS.map((tagColor) => (
+      {COLORS.TAGS.map((tagColor, index) => (
         <TouchableOpacity
           key={tagColor}
           style={[styles.selectColorButton, { backgroundColor: tagColor }]}
           onPress={() => onColorSelect(tagColor)}
+          accessibilityLabel={t('accessibility.selectTagColor', {
+            index: index + 1,
+          })}
+          accessibilityRole="button"
         />
       ))}
     </View>
