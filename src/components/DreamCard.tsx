@@ -7,6 +7,7 @@ import {
   TouchableOpacityProps,
   View,
 } from 'react-native';
+import { DrowsyMarkdown } from './DrowsyMarkdown';
 import { DrowsyText } from './DrowsyText';
 import { TagPlate } from './TagPlate';
 
@@ -25,7 +26,7 @@ export const DreamCard: React.FC<DreamCardProps> = ({
   return (
     <TouchableOpacity style={styles.dreamCard} {...props}>
       <DrowsyText type="title">{title}</DrowsyText>
-      {shortText && <DrowsyText>{shortText}</DrowsyText>}
+      {shortText && <DrowsyMarkdown value={shortText} variant="preview" />}
       {tags.length > 0 && (
         <View style={styles.platesList}>
           {tags.map((tag) => {

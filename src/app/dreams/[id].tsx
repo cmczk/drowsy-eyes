@@ -1,5 +1,6 @@
 import { DrowsyButton } from '@/components/DrowsyButton';
 import { DrowsyLoading } from '@/components/DrowsyLoading';
+import { DrowsyMarkdown } from '@/components/DrowsyMarkdown';
 import { DrowsyText } from '@/components/DrowsyText';
 import { TagPlate } from '@/components/TagPlate';
 import { COLORS } from '@/constants/theme';
@@ -9,31 +10,7 @@ import { useLocalization } from '@/localization';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import Markdown from 'react-native-marked';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const markdownTheme = {
-  colors: {
-    text: COLORS.DARK.TEXT,
-    link: '#58A6FF',
-    code: '#161B22',
-    border: COLORS.DARK.MUTED,
-  },
-};
-
-const markdownStyles = StyleSheet.create({
-  text: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  li: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  paragraph: {
-    paddingVertical: 6,
-  },
-});
 
 export default function DreamScreen() {
   const { t } = useLocalization();
@@ -184,16 +161,7 @@ export default function DreamScreen() {
           </View>
         )}
 
-        <Markdown
-          value={dream.text}
-          theme={markdownTheme}
-          styles={markdownStyles}
-          flatListProps={{
-            style: styles.markdown,
-            contentContainerStyle: styles.markdownContent,
-            showsVerticalScrollIndicator: false,
-          }}
-        />
+        <DrowsyMarkdown value={dream.text} />
       </View>
     </SafeAreaView>
   );
@@ -225,11 +193,5 @@ const styles = StyleSheet.create({
   },
   tagPlate: {
     alignSelf: 'flex-start',
-  },
-  markdown: {
-    flex: 1,
-  },
-  markdownContent: {
-    paddingBottom: 20,
   },
 });
