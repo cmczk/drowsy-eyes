@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, notExists, sql } from 'drizzle-orm';
 import { db } from './client';
 import {
   Dream,
@@ -9,6 +9,21 @@ import {
   tags,
   UpdateDream,
 } from './schema';
+
+type DreamTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function deleteUnusedTags(tx: DreamTransaction) {
+  tx.delete(tags)
+    .where(
+      notExists(
+        tx
+          .select({ tagId: dreamTags.tagId })
+          .from(dreamTags)
+          .where(eq(dreamTags.tagId, tags.id)),
+      ),
+    )
+    .run();
+}
 
 export async function getDreams(): Promise<DreamPreview[]> {
   const rows = await db
@@ -289,10 +304,15 @@ export async function updateDream({
         .run();
     }
 
+    deleteUnusedTags(tx);
+
     return dream;
   });
 }
 
 export async function deleteDream(id: number) {
-  await db.delete(dreams).where(eq(dreams.id, id));
+  return db.transaction((tx) => {
+    tx.delete(dreams).where(eq(dreams.id, id)).run();
+    deleteUnusedTags(tx);
+  });
 }
