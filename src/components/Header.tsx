@@ -98,11 +98,6 @@ export const Header: React.FC<HeaderProps> = ({
     setFilterVisible(false);
   };
 
-  const handleAboutPress = () => {
-    closeMenu();
-    router.push('/about');
-  };
-
   const handleSettingsPress = () => {
     closeMenu();
     router.push('/settings');
@@ -174,10 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
                   />
 
                   {hasSelectedFilters && (
-                    <View
-                      pointerEvents="none"
-                      style={styles.filterIndicator}
-                    />
+                    <View pointerEvents="none" style={styles.filterIndicator} />
                   )}
                 </View>
               )}
@@ -242,16 +234,6 @@ export const Header: React.FC<HeaderProps> = ({
                   ? t('header.creatingArchive')
                   : t('header.exportMarkdown')}
               </DrowsyText>
-            </Pressable>
-            <Pressable
-              accessibilityRole="menuitem"
-              onPress={handleAboutPress}
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-            >
-              <DrowsyText>{t('header.about')}</DrowsyText>
             </Pressable>
           </View>
         </View>
